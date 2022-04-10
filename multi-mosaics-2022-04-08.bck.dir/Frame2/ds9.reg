@@ -1,0 +1,18 @@
+# Region file format: DS9 version 4.1
+global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1
+fk5
+ellipse(83.8263133,-5.3920692,0.083",0.157",359.99896) # color=cyan text={a}
+ellipse(83.8262842,-5.3919861,0.058",0.100",31.155288) # color=cyan text={b}
+ellipse(83.8263083,-5.3919275,0.095",0.126",59.801184) # color=cyan text={c}
+ellipse(83.8263900,-5.3918342,0.063",0.078",330.96934) # color=cyan text={d}
+ellipse(83.8266167,-5.3919756,0.130",0.138",0) # color=cyan text={e}
+ellipse(83.8267221,-5.3916767,0.118",0.120",34.016388) # color=cyan text={f}
+ellipse(83.8267525,-5.3915278,0.118",0.120",34.016388) # color=cyan text={g}
+ellipse(83.8267496,-5.3914133,0.088",0.075",34.016388) # color=cyan text={h}
+ellipse(83.8267321,-5.3912603,0.088",0.075",34.016388) # color=cyan text={i}
+ellipse(83.8266367,-5.3911297,0.088",0.088",0) # color=cyan text={j}
+ellipse(83.8262867,-5.3909169,0.085",0.118",0) # color=cyan text={k}
+ellipse(83.8258029,-5.3913769,0.120",0.255",48.079107) # color=cyan text={k}
+ellipse(83.8245079,-5.3911706,0.102",0.101",355.39838) # color=cyan text={m}
+ellipse(83.8246429,-5.3906461,0.095",0.152",355.39838) # color=cyan text={l}
+ellipse(83.8240500,-5.3908467,0.193",0.227",355.39838) # color=cyan text={n}

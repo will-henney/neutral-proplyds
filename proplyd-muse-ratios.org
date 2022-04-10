@@ -1,0 +1,174 @@
+* Line ratios for proplyds from MUSE maps
++ This needn't just be proplyds, but may include the nebula too, and HH objects
+** [O I] 5577 line
+- Needs the sky to be removed panel by panel
+  - Similarly to how I dealt with the O II 7773 line
+
+*** Sky removal for 5577
+
+**** DONE Copy line map file from external SSD
+CLOSED: [2022-04-09 Sat 22:19]
+#+begin_src sh :results verbatim
+  FROM=/Volumes/SSD-2TB/OrionMuse/LineMaps
+  TO=data/muse
+
+  rsync -avP $FROM/linesum-O_I-5577.fits $TO
+#+end_src
+
+#+RESULTS:
+: sending incremental file list
+: 
+: sent 69 bytes  received 12 bytes  162.00 bytes/sec
+: total size is 10,431,360  speedup is 128,782.22
+
+**** DONE Do histograms of brightness in each tile
+CLOSED: [2022-04-10 Sun 00:33]
+#+BEGIN_SRC python :eval no :tangle scripts/sky-tile-hist.py
+  import sys
+  import os
+  import numpy as np
+  from astropy.io import fits
+  from astropy.modeling import models, fitting
+  from matplotlib import pyplot as plt
+  import seaborn as sns
+
+  try: 
+      infile = sys.argv[1]
+  except:
+      sys.exit('Usage: {} FITSFILE'.format(sys.argv[0]))
+
+
+  basename = os.path.basename(infile)
+  baseroot, _ = os.path.splitext(basename)
+  figfile = f"{sys.argv[0]}-{baseroot}.pdf"
+
+  hdu = fits.open(infile)[0]
+  if hdu.data is None:
+      hdu = fits.open(infile)[1]
+  hdr = hdu.header
+
+  ny, nx = hdu.data.shape
+
+  # Size of chunks
+  mx, my = 290, 290
+  xchunks, ychunks = nx//mx, ny//my
+
+
+  fig, axes = plt.subplots(ychunks, xchunks,
+                           sharex=True, sharey=True,
+                           figsize=(10, 10),
+  )
+
+
+  hdu.data /= 1000.0
+
+  m = np.isfinite(hdu.data)
+  vmin, vmax = np.percentile(hdu.data[m], [1.0, 99.0])
+  vrange = vmax - vmin
+  vmin -= 0.3*vrange
+  vmax += 0.3*vrange
+
+  m = m & (hdu.data >= vmin) & (hdu.data <= vmax)
+
+  fitter = fitting.LevMarLSQFitter()
+  for jchunk in range(ychunks):
+      yslice = slice(jchunk*my, jchunk*my + my)
+      for ichunk in range(xchunks):
+          xslice = slice(ichunk*mx, ichunk*mx + mx)
+
+          mm = m[yslice, xslice]
+          tile = hdu.data[yslice, xslice][mm]
+          ax = axes[ychunks - jchunk - 1, ichunk]
+          hist, edges, _ = ax.hist(tile, bins=100, range=[vmin, vmax])
+          centers = 0.5*(edges[:-1] + edges[1:])
+
+
+          a0 = hist.max()
+          v0 = np.mean(tile)
+          vmedian = np.median(tile)
+          s0 = np.std(tile)
+          g_init = models.Gaussian1D(amplitude=a0, mean=v0, stddev=s0)
+          select = hist > 0.3*a0
+          g = fitter(g_init, centers[select], hist[select])
+          ax.plot(centers, g(centers), c='r', lw=0.5)
+          # ax.plot(centers, g_init(centers), c='g')
+
+          ax.axvline(0.0, c='k', alpha=0.5)
+          ax.axvline(vmedian, c='r', alpha=1.0)
+
+          s = f"peak = {g.mean.value:.2f}\nstd = {g.stddev.value:.2f}"
+          ax.text(0.95, 0.95, s,
+                  ha='right', va='top',
+                  fontsize='xx-small',
+                  transform=ax.transAxes)
+
+  fig.savefig(figfile)
+  print(figfile, end='')
+#+END_SRC
+
+#+BEGIN_SRC sh :results file
+python scripts/sky-tile-hist.py data/muse/linesum-O_I-5577.fits
+#+END_SRC
+
+#+RESULTS:
+[[file:scripts/sky-tile-hist.py-linesum-O_I-5577.pdf]]
+
+**** DONE Remove the sky and save a corrected file
+CLOSED: [2022-04-10 Sun 00:33]
+- Top row are all the same except the last one, which is lower
+- Second row, first four go up linearly, then drop to last two
+- Third row, first higher, then all lower
+- Fourth row, higher again
+
+
+#+name: sky-tiles-5577
+| 10.85 | 10.85 | 10.85 | 10.85 | 10.85 | 10.11 |
+|   9.6 |   9.9 |  10.4 |  10.9 |   9.9 |   9.9 |
+|   8.5 |   8.3 |   8.3 |   8.3 |   8.3 |   7.9 |
+|   9.4 |   9.7 |   9.5 |   8.9 |   8.9 |   9.2 |
+|  10.2 |  10.2 |   9.8 |   9.8 |   9.8 |   9.8 |
+
+#+header: :var skytab=sky-tiles-5577 mapname="linesum-O_I-5577"
+#+BEGIN_SRC python
+  import numpy as np
+  from astropy.io import fits
+
+  infile = f"data/muse/{mapname}.fits"
+
+  hdu = fits.open(infile)[0]
+  if hdu.data is None:
+      hdu = fits.open(infile)[1]
+  hdr = hdu.header
+
+  ny, nx = hdu.data.shape
+
+  # Size of chunks
+  mx, my = 292, 292
+  xchunks, ychunks = nx//mx, ny//my
+  # Margin of unused pixels
+  marginx, marginy = 4, 2
+
+  for jchunk in range(ychunks):
+      yslice = slice(jchunk*my + marginy, jchunk*my + marginy + my)
+      for ichunk in range(xchunks):
+          xslice = slice(ichunk*mx + marginx, ichunk*mx + marginx + mx)
+          skylevel = 1000.0*skytab[ychunks - jchunk - 1][ichunk]
+          hdu.data[yslice, xslice] -= skylevel
+
+  # Mask out scar artefacts
+  # hdu.data[292:302, 580:] = np.nan
+  # hdu.data[870:877, 300:1380] = np.nan
+
+  hdu.writeto(infile.replace('.fits', '-nosky.fits'), overwrite=True)
+#+END_SRC
+
+#+RESULTS:
+: None
+
+*** TODO Nebular emission of 5577
+- How does it compare with 6300?
+  - ratio near brightness peak is about 0.015
+  - ratio at hh 201 is 0.01, but that may  be heavily reddened
+- Can we measure a temperature?
+  - need to de-redden at least with the foreground
+  - and then compare with PyNeb
