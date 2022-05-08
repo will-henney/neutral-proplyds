@@ -8,7 +8,7 @@
 
 **** DONE Copy line map file from external SSD
 CLOSED: [2022-04-09 Sat 22:19]
-#+begin_src sh :results verbatim
+#+begin_src sh :results verbatim :dir ..
   FROM=/Volumes/SSD-2TB/OrionMuse/LineMaps
   TO=data/muse
 
@@ -23,7 +23,7 @@ CLOSED: [2022-04-09 Sat 22:19]
 
 **** DONE Do histograms of brightness in each tile
 CLOSED: [2022-04-10 Sun 00:33]
-#+BEGIN_SRC python :eval no :tangle scripts/sky-tile-hist.py
+#+BEGIN_SRC python :eval no :tangle ../scripts/sky-tile-hist.py
   import sys
   import os
   import numpy as np
@@ -106,7 +106,7 @@ CLOSED: [2022-04-10 Sun 00:33]
   print(figfile, end='')
 #+END_SRC
 
-#+BEGIN_SRC sh :results file
+#+BEGIN_SRC sh :results file :dir ..
 python scripts/sky-tile-hist.py data/muse/linesum-O_I-5577.fits
 #+END_SRC
 
@@ -133,7 +133,7 @@ CLOSED: [2022-04-10 Sun 00:33]
   import numpy as np
   from astropy.io import fits
 
-  infile = f"data/muse/{mapname}.fits"
+  infile = f"../data/muse/{mapname}.fits"
 
   hdu = fits.open(infile)[0]
   if hdu.data is None:
