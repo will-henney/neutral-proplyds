@@ -172,3 +172,12 @@ CLOSED: [2022-04-10 Sun 00:33]
 - Can we measure a temperature?
   - need to de-redden at least with the foreground
   - and then compare with PyNeb
+
+
+** Other lines
+- oi 6300, 
+- oi 8446
+- ni 5199
+- oii 7330
+- ci 8727
+- feii 8617, 7155
