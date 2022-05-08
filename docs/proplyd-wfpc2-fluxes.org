@@ -1,0 +1,13 @@
+* Measuring [O I] 6300 flux from HST images of proplyds
+
+** Initial description for Tom and Giulia
+Craft document
++ [[shell:open 'craftdocs://open?blockId=b988d13e-945f-dbb2-d3b2-481510def473&spaceId=ebf58611-71d2-f72d-500b-350bfc7b0451'][Link to open in app]]
++ [[https://www.craft.do/s/aM03PvVnYpJYVW][Link to public web page]]
+
+
+** What files are we using?
+
+*** PC mosaic
+
+*** WFC mosaic
