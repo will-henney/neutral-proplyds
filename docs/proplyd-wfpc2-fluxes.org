@@ -33,3 +33,9 @@ Craft document
 - We can plot profiles vs radius from proplyd center (star if seen)
   - Then subtract off the stellar profile and the i-front profile to get the disk flow contribution
   - At least, in theory 
+** How to calculate the profiles
+1. Find the radius and PA of all pixels with respect to the proplyd
+2. Define an orientation PA0 for the proplyd
+   - either the PA  to th1C
+   - or a value defined by hand
+3. plot brightness versus radius for all pixels within +/- 90 deg of PA0
