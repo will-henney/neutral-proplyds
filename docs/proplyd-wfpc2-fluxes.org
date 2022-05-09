@@ -9,5 +9,27 @@ Craft document
 ** What files are we using?
 
 *** PC mosaic
-
+- Files in [[file:../../JorgeBowshocks/HST/]]
+  - ~wcs_GO5469PCf656e_sharp_16.fits~ for Ha
+  - Similarly f631e, f547e, f673e
+  - WCS adjustments in
+    - [[file:../pc-mosaic-f547m-LV456.wcs]]
+    - etc
+      
 *** WFC mosaic
+- Files in [[file:../../../Work/BobPC/2002/]]
+  - ~final673-radec_sharp_16.fits~, etc
+  - These still need a bit of work on the alignment
+** Method for measuring fluxes
+- We need to isolate the emission from
+  - the disk and neutral wind
+  - the ionization front
+  - the star
+- For this, we use the following bands
+  - F631N  which is mainly oi, from i-front and disk, but also some
+  - F656N  which is mainly Ha from i-front, with very little stellar continuum
+  - F547M which is mainly stellar continuum, with a bit of nebular continuum
+  - F673N which is sii from i-front (weak) plus stellar continuum
+- We can plot profiles vs radius from proplyd center (star if seen)
+  - Then subtract off the stellar profile and the i-front profile to get the disk flow contribution
+  - At least, in theory 
