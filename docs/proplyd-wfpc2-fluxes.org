@@ -39,3 +39,77 @@ Craft document
    - either the PA  to th1C
    - or a value defined by hand
 3. plot brightness versus radius for all pixels within +/- 90 deg of PA0
+4. Make some routines in whispy to do this
+   - whispy
+   -
+** Get aligned versions of the PC mosaics
+#+begin_src python :results output
+  from pathlib import Path
+  from astropy.wcs import WCS
+  from astropy.io import fits
+
+  inpath = Path.home() / "Dropbox/JorgeBowshocks/HST"
+
+  hdu = fits.open(inpath / "wcs_GO5469PCf656e_sharp_16.fits")[0]
+
+  w = WCS(hdu)
+  print(w)
+#+end_src
+
+#+RESULTS:
+: WCS Keywords
+: 
+: Number of WCS axes: 2
+: CTYPE : 'RA---TAN'  'DEC--TAN'  
+: CRVAL : 83.82214183333333  -5.394832672222222  
+: CRPIX : 811.0  987.0  
+: CD1_1 CD1_2  : 8.959642e-06  8.79584e-06  
+: CD2_1 CD2_2  : 8.79584e-06  -8.959642e-06  
+: NAXIS : 1320  2060
+*** TODO Easy method - use the WCS shifts we already have
+
+These are the WCS files I made when I did the alignment by hand
+
+#+begin_src sh
+grep CRPIX ../*.wcs
+#+end_src
+
+#+RESULTS:
+| ../pc-mosaic-f547m-LV456.wcs:CRPIX1 | = | 810.7 |
+| ../pc-mosaic-f547m-LV456.wcs:CRPIX2 | = | 987.3 |
+| ../pc-mosaic-f656n-LV456.wcs:CRPIX1 | = |   811 |
+| ../pc-mosaic-f656n-LV456.wcs:CRPIX2 | = | 987.5 |
+| ../pc-mosaic-f658n-LV456.wcs:CRPIX1 | = | 810.5 |
+| ../pc-mosaic-f658n-LV456.wcs:CRPIX2 | = | 987.5 |
+
+Unfortunately, I cannot remember which ones I used for the 673 and 631 filters.  I will assume that they are the same as 547
+
+#+name: wcs-crpix-pc
+| f547m | 810.7 | 987.3 |
+| f656n | 811.0 | 987.5 |
+| f658n | 810.5 | 987.5 |
+| f673n | 810.7 | 987.3 |
+| f631n | 810.7 | 987.3 |
+
+#+header: :var TAB=wcs-crpix-pc
+#+begin_src python :results output
+  from pathlib import Path
+  from astropy.wcs import WCS
+  from astropy.io import fits
+
+  inpath = Path.home() / "Dropbox/JorgeBowshocks/HST"
+  outpath = Path.cwd().parent / "data"
+
+  for suff in "smooth", "sharp":
+      for f, istring, jstring in TAB:
+          hdu = fits.open(inpath / f"wcs_GO5469PC{f[:-1]}e_{suff}_16.fits")[0]
+          hdu.header["CRPIX1"] = float(istring)
+          hdu.header["CRPIX2"] = float(jstring)
+          hdu.writeto(outpath / f"pcmos-{f}_{suff}_16.fits", overwrite=True)
+
+
+#+end_src
+
+#+RESULTS:
+
+*** Harder method - do source detection and loo for the average shift
