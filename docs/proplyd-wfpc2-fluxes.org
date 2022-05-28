@@ -66,7 +66,8 @@ Craft document
 : CD1_1 CD1_2  : 8.959642e-06  8.79584e-06  
 : CD2_1 CD2_2  : 8.79584e-06  -8.959642e-06  
 : NAXIS : 1320  2060
-*** TODO Easy method - use the WCS shifts we already have
+*** DONE Easy method - use the WCS shifts we already have
+CLOSED: [2022-05-26 Thu 08:33]
 
 These are the WCS files I made when I did the alignment by hand
 
@@ -113,3 +114,9 @@ Unfortunately, I cannot remember which ones I used for the 673 and 631 filters. 
 #+RESULTS:
 
 *** Harder method - do source detection and loo for the average shift
+
+** Coordinates of the proplyds
+- It turns out that the OW94 coordinates from SIMBAD are not quite accurate enough
+- We could maybe use the Ricci coordinates instead
+  - We can still use SIMBAD but using the ~[RRS2008]~ prefix instead
+  - No, that does not work. It just uses the Ricci ID to identify the source, but  it 
