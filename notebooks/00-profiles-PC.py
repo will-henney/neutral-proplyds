@@ -83,8 +83,8 @@ proplyd_tab
 # # Look at image of some sources
 
 # + tags=[]
-fname = "f547m"
-hdu = fits.open(datapath / f"pcmos-{fname}_sharp_16.fits")[0]
+fname = "f631n"
+hdu = fits.open(datapath / f"align-pcmos-{fname}_sharp_16.fits")[0]
 # -
 
 W = WCS(hdu.header)
@@ -146,7 +146,9 @@ ax.set(
     ylim=[0, ny],
 )
 
-np.ma.is_masked(CPIX.ra.deg)
+proplyd_tab.loc[source]["ICRS"].to_string("hmsdms")
+
+proplyd_tab.loc[source]["ICRS"].to_string
 
 # +
 # ax.pcolormesh?

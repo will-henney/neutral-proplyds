@@ -113,7 +113,11 @@ Unfortunately, I cannot remember which ones I used for the 673 and 631 filters. 
 
 #+RESULTS:
 
-*** Harder method - do source detection and loo for the average shift
+*** TODO Harder method - do source detection and look for the average shift
+- It looks like this will be necessary after all
+- I will try and use the methodology that I developed for the Multifrecuencia course
+- I will start with the files that I already tweaked the WCS by hand in the previous section, mainly because I have the data in this repo and they have a more uniform naming scheme
+  - Since they are already high-pass filtered, there is no need to do any background subtraction
 
 
 
@@ -165,4 +169,7 @@ Unfortunately, I cannot remember which ones I used for the 673 and 631 filters. 
 - It turns out that the OW94 coordinates from SIMBAD are not quite accurate enough
 - We could maybe use the Ricci coordinates instead
   - We can still use SIMBAD but using the ~[RRS2008]~ prefix instead
-  - No, that does not work. It just uses the Ricci ID to identify the source, but  it 
+  - No, that does not work. It just uses the Ricci ID to identify the source, but  it
+- And now it turns out that these coordinates are not accurate enough either
+  - So we are going to have to find the coordinates by hand.
+  - Probably nest to use the F5473 filter for that
