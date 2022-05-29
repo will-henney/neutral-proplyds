@@ -115,6 +115,52 @@ Unfortunately, I cannot remember which ones I used for the 673 and 631 filters. 
 
 *** Harder method - do source detection and loo for the average shift
 
+
+
+  
+
+
+**** Find the sources in the images
++ For the ground truth we will use the Robberto 2005 data
++ I have copied the source identification script over to [[file:../scripts/find-sources.py]]
++ Trial run with the F631N filter to start with
+
+#+begin_src sh :dir ../data :results verbatim
+  python ../scripts/find-sources.py pcmos-f631n_sharp_16.fits 4.0 5.0
+#+end_src
+
+#+RESULTS:
+: Source list saved to pcmos-f631n_sharp_16-sources-fwhm4.0-thresh5.ecsv
+: Region file saved to pcmos-f631n_sharp_16-sources-fwhm4.0-thresh5.reg
+
++ Repeat for the other filters
+#+begin_src sh :dir ../data :results verbatim
+  for f in 547m 656n 658n 673n; do 
+      python ../scripts/find-sources.py pcmos-f${f}_sharp_16.fits 4.0 5.0
+  done
+#+end_src
+
+#+RESULTS:
+: Source list saved to pcmos-f547m_sharp_16-sources-fwhm4.0-thresh5.ecsv
+: Region file saved to pcmos-f547m_sharp_16-sources-fwhm4.0-thresh5.reg
+: Source list saved to pcmos-f656n_sharp_16-sources-fwhm4.0-thresh5.ecsv
+: Region file saved to pcmos-f656n_sharp_16-sources-fwhm4.0-thresh5.reg
+: Source list saved to pcmos-f658n_sharp_16-sources-fwhm4.0-thresh5.ecsv
+: Region file saved to pcmos-f658n_sharp_16-sources-fwhm4.0-thresh5.reg
+: Source list saved to pcmos-f673n_sharp_16-sources-fwhm4.0-thresh5.ecsv
+: Region file saved to pcmos-f673n_sharp_16-sources-fwhm4.0-thresh5.reg
+
+**** Inspect the sources in DS9
+- They are sort of OK, but the ACS sources do not do a very good job for the proplyds
+
+**** Match the sources
+
+- I am going to try this in a notebook
+- This is now done for f631n and it worked fine
+  - See [[file:../notebooks/01-align-PC.py]]
+- /BUT/ it turns out that the Ricci coordinates are not good enough, so I will have to set my own coordinates for each source
+- However, I will go through the exercise for the remaining filters, since at least it will mean that the image alignment between filters will be correct
+  
 ** Coordinates of the proplyds
 - It turns out that the OW94 coordinates from SIMBAD are not quite accurate enough
 - We could maybe use the Ricci coordinates instead
