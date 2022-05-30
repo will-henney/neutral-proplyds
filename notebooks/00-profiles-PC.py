@@ -150,8 +150,10 @@ proplyd_tab.loc[source]["ICRS"].to_string("hmsdms")
 
 proplyd_tab.loc[source]["ICRS"].to_string
 
-# +
-# ax.pcolormesh?
-# -
+# So this shows that we can put the images at arbitrary axes if we use `pcolormesh` bt that the coordinates are not good enough from the catalogs. We have made our own list of coordinates instead.
+
+# # Read in list  of sources with my bespoke coordinates
+#
+# These are specialized to the case of the PC mosaic, since the alignment with Robberto is still not perfect, even though I have done my best.
 
 
