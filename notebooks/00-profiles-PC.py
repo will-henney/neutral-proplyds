@@ -101,6 +101,7 @@ ax.imshow(hdu.data, vmin=0, vmax=2, cmap="gray_r")
 #
 #
 
+# + tags=[]
 ny, nx = 100, 100
 pixscale = Angle("0.05 arcsec").deg
 c = proplyd_tab.loc[source]["ICRS"]
@@ -109,6 +110,7 @@ wc.wcs.cdelt = [-pixscale, pixscale]
 wc.wcs.crval = [c.ra.deg, c.dec.deg]
 wc.wcs.crpix = [0.5 * (1 + nx), 0.5 * (1 + ny)]
 wc.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+# -
 
 wc
 
@@ -155,5 +157,67 @@ proplyd_tab.loc[source]["ICRS"].to_string
 # # Read in list  of sources with my bespoke coordinates
 #
 # These are specialized to the case of the PC mosaic, since the alignment with Robberto is still not perfect, even though I have done my best.
+
+import regions
+
+regfile = datapath / "pcmos-proplyds.reg"
+regs = regions.Regions.read(datapath / regfile, format="ds9")
+
+source_list = [{"Name": r.meta["label"],  "ICRS": r.center} for r in regs]
+
+import pandas as pd
+from astropy.table import Table
+
+source_table = Table(source_list)
+source_table
+
+# ## Find PA to th1C
+
+c0 = SkyCoord.from_name("* tet01 Ori C")
+
+source_table["PA"] = source_table["ICRS"].position_angle(c0).to(u.deg)
+source_table["Sep"] = source_table["ICRS"].separation(c0).to(u.arcsec)
+source_table.add_index("Name")
+
+source_table
+
+source_table.loc[source]
+
+# + tags=[]
+ny, nx = 100, 100
+pixscale = Angle("0.05 arcsec").deg
+c = source_table.loc[source]["ICRS"]
+wc = WCS(naxis=2)
+wc.wcs.cdelt = [-pixscale, pixscale]
+wc.wcs.crval = [c.ra.deg, c.dec.deg]
+wc.wcs.crpix = [0.5 * (1 + nx), 0.5 * (1 + ny)]
+wc.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+# -
+
+fig, ax = plt.subplots(
+    figsize=(12, 12),
+    subplot_kw=dict(projection=wc),
+)
+T = ax.get_transform("world")
+ax.pcolormesh(
+    CPIX.ra.deg,
+    CPIX.dec.deg,
+    hdu.data, 
+    vmin=0, 
+    vmax=15, 
+    cmap="gray_r",
+    shading="nearest",
+    transform=T,
+)
+ax.scatter(c.ra.deg, c.dec.deg, transform=T, color='r')
+ax.set_aspect("equal")
+ax.set(
+    xlim=[0, nx],
+    ylim=[0, ny],
+)
+
+# +
+# ax.quiver?
+# -
 
 
