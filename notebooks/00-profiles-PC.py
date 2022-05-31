@@ -183,19 +183,24 @@ source_table
 
 source_table.loc[source]
 
+# # Redo the images but oriented with th1C direction being vertical
+
 # + tags=[]
-ny, nx = 100, 100
+source = "177-341W"
+ny, nx = 30, 30
 pixscale = Angle("0.05 arcsec").deg
 c = source_table.loc[source]["ICRS"]
+pa = source_table.loc[source]["PA"] * u.deg
+cpa, spa = np.cos(pa), np.sin(pa)
 wc = WCS(naxis=2)
 wc.wcs.cdelt = [-pixscale, pixscale]
+wc.wcs.pc = [[cpa, -spa], [spa, cpa]]
 wc.wcs.crval = [c.ra.deg, c.dec.deg]
 wc.wcs.crpix = [0.5 * (1 + nx), 0.5 * (1 + ny)]
 wc.wcs.ctype = ["RA---TAN", "DEC--TAN"]
-# -
 
 fig, ax = plt.subplots(
-    figsize=(12, 12),
+    figsize=(6, 6),
     subplot_kw=dict(projection=wc),
 )
 T = ax.get_transform("world")
@@ -215,9 +220,362 @@ ax.set(
     xlim=[0, nx],
     ylim=[0, ny],
 )
+...;
+
+# + tags=[]
+source = "180-331"
+ny, nx = 30, 30
+pixscale = Angle("0.05 arcsec").deg
+c = source_table.loc[source]["ICRS"]
+pa = source_table.loc[source]["PA"] * u.deg
+cpa, spa = np.cos(pa), np.sin(pa)
+wc = WCS(naxis=2)
+wc.wcs.cdelt = [-pixscale, pixscale]
+wc.wcs.pc = [[cpa, -spa], [spa, cpa]]
+wc.wcs.crval = [c.ra.deg, c.dec.deg]
+wc.wcs.crpix = [0.5 * (1 + nx), 0.5 * (1 + ny)]
+wc.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+
+fig, ax = plt.subplots(
+    figsize=(6, 6),
+    subplot_kw=dict(projection=wc),
+)
+T = ax.get_transform("world")
+ax.pcolormesh(
+    CPIX.ra.deg,
+    CPIX.dec.deg,
+    hdu.data, 
+    vmin=0, 
+    vmax=15, 
+    cmap="gray_r",
+    shading="nearest",
+    transform=T,
+)
+ax.scatter(c.ra.deg, c.dec.deg, transform=T, color='r')
+ax.set_aspect("equal")
+ax.set(
+    xlim=[0, nx],
+    ylim=[0, ny],
+)
+...;
+
+# + tags=[]
+source = "182-413"
+ny, nx = 60, 60
+pixscale = Angle("0.05 arcsec").deg
+c = source_table.loc[source]["ICRS"]
+pa = source_table.loc[source]["PA"] * u.deg
+#pa = 330 * u.deg
+cpa, spa = np.cos(pa), np.sin(pa)
+wc = WCS(naxis=2)
+wc.wcs.cdelt = [-pixscale, pixscale]
+wc.wcs.pc = [[cpa, -spa], [spa, cpa]]
+wc.wcs.crval = [c.ra.deg, c.dec.deg]
+wc.wcs.crpix = [0.5 * (1 + nx), 0.5 * (1 + ny)]
+wc.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+
+fig, ax = plt.subplots(
+    figsize=(6, 6),
+    subplot_kw=dict(projection=wc),
+)
+T = ax.get_transform("world")
+ax.pcolormesh(
+    CPIX.ra.deg,
+    CPIX.dec.deg,
+    hdu.data, 
+    vmin=0, 
+    vmax=5, 
+    cmap="gray_r",
+    shading="nearest",
+    transform=T,
+)
+ax.scatter(c.ra.deg, c.dec.deg, transform=T, color='r')
+ax.set_aspect("equal")
+ax.set(vv
+    xlim=[0, nx],
+    ylim=[0, ny],
+)
+...;
+
+# + tags=[]
+source = "155-337"
+ny, nx = 30, 30
+pixscale = Angle("0.05 arcsec").deg
+c = source_table.loc[source]["ICRS"]
+pa = source_table.loc[source]["PA"] * u.deg
+cpa, spa = np.cos(pa), np.sin(pa)
+wc = WCS(naxis=2)
+wc.wcs.cdelt = [-pixscale, pixscale]
+wc.wcs.pc = [[cpa, -spa], [spa, cpa]]
+wc.wcs.crval = [c.ra.deg, c.dec.deg]
+wc.wcs.crpix = [0.5 * (1 + nx), 0.5 * (1 + ny)]
+wc.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+
+fig, ax = plt.subplots(
+    figsize=(6, 6),
+    subplot_kw=dict(projection=wc),
+)
+T = ax.get_transform("world")
+ax.pcolormesh(
+    CPIX.ra.deg,
+    CPIX.dec.deg,
+    hdu.data, 
+    vmin=0, 
+    vmax=10, 
+    cmap="gray_r",
+    shading="nearest",
+    transform=T,
+)
+ax.scatter(c.ra.deg, c.dec.deg, transform=T, color='r')
+ax.set_aspect("equal")
+ax.set(
+    xlim=[0, nx],
+    ylim=[0, ny],
+)
+...;
+
+# + tags=[]
+source = "176-325"
+ny, nx = 30, 30
+pixscale = Angle("0.05 arcsec").deg
+c = source_table.loc[source]["ICRS"]
+pa = source_table.loc[source]["PA"] * u.deg
+cpa, spa = np.cos(pa), np.sin(pa)
+wc = WCS(naxis=2)
+wc.wcs.cdelt = [-pixscale, pixscale]
+wc.wcs.pc = [[cpa, -spa], [spa, cpa]]
+wc.wcs.crval = [c.ra.deg, c.dec.deg]
+wc.wcs.crpix = [0.5 * (1 + nx), 0.5 * (1 + ny)]
+wc.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+
+fig, ax = plt.subplots(
+    figsize=(6, 6),
+    subplot_kw=dict(projection=wc),
+)
+T = ax.get_transform("world")
+ax.pcolormesh(
+    CPIX.ra.deg,
+    CPIX.dec.deg,
+    hdu.data, 
+    vmin=0, 
+    vmax=10, 
+    cmap="gray_r",
+    shading="nearest",
+    transform=T,
+)
+ax.scatter(c.ra.deg, c.dec.deg, transform=T, color='r')
+ax.set_aspect("equal")
+ax.set(
+    xlim=[0, nx],
+    ylim=[0, ny],
+)
+...;
+
+# + tags=[]
+source = "163-317"
+ny, nx = 30, 30
+pixscale = Angle("0.05 arcsec").deg
+c = source_table.loc[source]["ICRS"]
+pa = source_table.loc[source]["PA"] * u.deg
+cpa, spa = np.cos(pa), np.sin(pa)
+wc = WCS(naxis=2)
+wc.wcs.cdelt = [-pixscale, pixscale]
+wc.wcs.pc = [[cpa, -spa], [spa, cpa]]
+wc.wcs.crval = [c.ra.deg, c.dec.deg]
+wc.wcs.crpix = [0.5 * (1 + nx), 0.5 * (1 + ny)]
+wc.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+
+fig, ax = plt.subplots(
+    figsize=(6, 6),
+    subplot_kw=dict(projection=wc),
+)
+T = ax.get_transform("world")
+ax.pcolormesh(
+    CPIX.ra.deg,
+    CPIX.dec.deg,
+    hdu.data, 
+    vmin=0, 
+    vmax=20, 
+    cmap="gray_r",
+    shading="nearest",
+    transform=T,
+)
+ax.scatter(c.ra.deg, c.dec.deg, transform=T, color='r')
+ax.set_aspect("equal")
+ax.set(
+    xlim=[0, nx],
+    ylim=[0, ny],
+)
+...;
+# -
+
+# # Finally do the radial profiles
+
+source = "177-341W"
+c = source_table.loc[source]["ICRS"]
+pa0 = source_table.loc[source]["PA"] * u.deg
+r = c.separation(CPIX)
+pa = c.position_angle(CPIX)
+cth = np.cos((pa - pa0))
+m = (r <= 1.0 * u.arcsec) & ((cth >= -0.2) | (r <= 0.1 * u.arcsec))
+
+# Use radii up to 1 arcsec.
+# Take a slightly generous range of angles, going 30 degrees into the tail region.  
+# Also, unconditionally include all pixels closer than 0.1 arcsec, regardless of the angle. 
 
 # +
-# ax.quiver?
+ny, nx = 50, 50
+pixscale = Angle("0.05 arcsec").deg
+cpa, spa = np.cos(pa0), np.sin(pa0)
+wc = WCS(naxis=2)
+wc.wcs.cdelt = [-pixscale, pixscale]
+wc.wcs.pc = [[cpa, -spa], [spa, cpa]]
+wc.wcs.crval = [c.ra.deg, c.dec.deg]
+wc.wcs.crpix = [0.5 * (1 + nx), 0.5 * (1 + ny)]
+wc.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+
+fig, ax = plt.subplots(
+    figsize=(6, 6),
+    subplot_kw=dict(projection=wc),
+)
+T = ax.get_transform("world")
+ax.pcolormesh(
+    CPIX.ra.deg,
+    CPIX.dec.deg,
+    np.where(m, hdu.data, np.nan), 
+    vmin=0, 
+    vmax=15, 
+    cmap="gray_r",
+    shading="nearest",
+    transform=T,
+)
+ax.scatter(c.ra.deg, c.dec.deg, transform=T, color='r')
+ax.set_aspect("equal")
+ax.set(
+    xlim=[0, nx],
+    ylim=[0, ny],
+)
+...;
 # -
+
+# So that looks OK, now plot the profile
+
+fig, ax = plt.subplots()
+ax.scatter(
+    r.arcsec[m], hdu.data[m],
+    c=(pa-pa0)[m],
+    alpha=0.5,
+    cmap="magma_r",
+    s=20,
+)
+ax.axhline(0, linestyle="dotted")
+ax.axhline(1, linestyle="dotted")
+ax.axvline(0, linestyle="dotted")
+...;
+
+# So that works pretty well. We see the sentral peak from the star, and then a broader angle-dependent maximum that comes from the proplyd flow. 
+
+# Now we can try and do the same for some messier and/or smaller and/or weaker sources.
+
+source = "155-337"
+c = source_table.loc[source]["ICRS"]
+pa0 = source_table.loc[source]["PA"] * u.deg
+r = c.separation(CPIX)
+pa = c.position_angle(CPIX)
+cth = np.cos((pa - pa0))
+m = (r <= 1.0 * u.arcsec) & ((cth >= -0.2) | (r <= 0.1 * u.arcsec))
+fig, ax = plt.subplots()
+ax.scatter(
+    r.arcsec[m], hdu.data[m],
+    c=(pa-pa0)[m],
+    alpha=0.5,
+    cmap="magma_r",
+    s=20,
+)
+ax.axhline(0, linestyle="dotted")
+ax.axhline(1, linestyle="dotted")
+ax.axvline(0, linestyle="dotted")
+...;
+
+source = "180-331"
+c = source_table.loc[source]["ICRS"]
+pa0 = source_table.loc[source]["PA"] * u.deg
+r = c.separation(CPIX)
+pa = c.position_angle(CPIX)
+cth = np.cos((pa - pa0))
+m = (r <= 1.0 * u.arcsec) & ((cth >= -0.2) | (r <= 0.1 * u.arcsec))
+fig, ax = plt.subplots()
+ax.scatter(
+    r.arcsec[m], hdu.data[m],
+    c=(pa-pa0)[m],
+    alpha=0.5,
+    cmap="magma_r",
+    s=20,
+)
+ax.axhline(0, linestyle="dotted")
+ax.axhline(1, linestyle="dotted")
+ax.axvline(0, linestyle="dotted")
+...;
+
+source = "182-413"
+c = source_table.loc[source]["ICRS"]
+pa0 = source_table.loc[source]["PA"] * u.deg
+r = c.separation(CPIX)
+pa = c.position_angle(CPIX)
+cth = np.cos((pa - pa0))
+m = (r <= 2.0 * u.arcsec) & ((cth >= -0.2) | (r <= 0.1 * u.arcsec))
+fig, ax = plt.subplots()
+ax.axhline(0, linestyle="dotted")
+ax.axhline(1, linestyle="dotted")
+ax.axvline(0, linestyle="dotted")
+ax.scatter(
+    r.arcsec[m], hdu.data[m],
+    c=(pa-pa0)[m],
+    alpha=0.5,
+    cmap="magma_r",
+    s=20,
+)
+
+source = "156-308 NEW"
+c = source_table.loc[source]["ICRS"]
+pa0 = source_table.loc[source]["PA"] * u.deg
+r = c.separation(CPIX)
+pa = c.position_angle(CPIX)
+cth = np.cos((pa - pa0))
+m = (r <= 1.0 * u.arcsec) & ((cth >= -0.2) | (r <= 0.1 * u.arcsec))
+fig, ax = plt.subplots()
+ax.scatter(
+    r.arcsec[m], hdu.data[m],
+    c=(pa-pa0)[m],
+    alpha=0.5,
+    cmap="magma_r",
+    s=20,
+)
+ax.axhline(0, linestyle="dotted")
+ax.axhline(1, linestyle="dotted")
+ax.axvline(0, linestyle="dotted")
+...;
+
+source = "154-321 NEW"
+c = source_table.loc[source]["ICRS"]
+pa0 = source_table.loc[source]["PA"] * u.deg
+r = c.separation(CPIX)
+pa = c.position_angle(CPIX)
+cth = np.cos((pa - pa0))
+m = (r <= 1.0 * u.arcsec) & ((cth >= -0.2) | (r <= 0.1 * u.arcsec))
+fig, ax = plt.subplots()
+ax.scatter(
+    r.arcsec[m], hdu.data[m],
+    c=(pa-pa0)[m],
+    alpha=0.5,
+    cmap="magma_r",
+    s=20,
+)
+ax.axhline(0, linestyle="dotted")
+ax.axhline(1, linestyle="dotted")
+ax.axvline(0, linestyle="dotted")
+...;
+
+# Now I just need to systematize all this
 
 
