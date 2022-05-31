@@ -113,7 +113,8 @@ Unfortunately, I cannot remember which ones I used for the 673 and 631 filters. 
 
 #+RESULTS:
 
-*** TODO Harder method - do source detection and look for the average shift
+*** DONE Harder method - do source detection and look for the average shift
+CLOSED: [2022-05-31 Tue 09:21]
 - It looks like this will be necessary after all
 - I will try and use the methodology that I developed for the Multifrecuencia course
 - I will start with the files that I already tweaked the WCS by hand in the previous section, mainly because I have the data in this repo and they have a more uniform naming scheme
@@ -165,11 +166,22 @@ Unfortunately, I cannot remember which ones I used for the 673 and 631 filters. 
 - /BUT/ it turns out that the Ricci coordinates are not good enough, so I will have to set my own coordinates for each source
 - However, I will go through the exercise for the remaining filters, since at least it will mean that the image alignment between filters will be correct
   
-** Coordinates of the proplyds
+** DONE Coordinates of the proplyds
+CLOSED: [2022-05-31 Tue 09:23]
 - It turns out that the OW94 coordinates from SIMBAD are not quite accurate enough
 - We could maybe use the Ricci coordinates instead
   - We can still use SIMBAD but using the ~[RRS2008]~ prefix instead
   - No, that does not work. It just uses the Ricci ID to identify the source, but  it
 - And now it turns out that these coordinates are not accurate enough either
   - So we are going to have to find the coordinates by hand.
-  - Probably nest to use the F5473 filter for that
+  - Probably nest to use the F547 filter for that
+- This is now done for a bunch of proplyds
+  - [[file:../data/pcmos-proplyds.reg]]
+  - Note that the coordinates are for the PC mosaic, which is still not perfectly aligned with Robberto in some places, especially in the S near 182-413
+
+
+** TODO Extract the radial profiles
+- There is a pilot version done in the notebook
+  - [[file:../notebooks/00-profiles-PC.py]]
+- Next job is to do it for all the filters and sources
+  

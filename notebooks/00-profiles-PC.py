@@ -160,26 +160,34 @@ proplyd_tab.loc[source]["ICRS"].to_string
 
 import regions
 
+# + tags=[]
 regfile = datapath / "pcmos-proplyds.reg"
 regs = regions.Regions.read(datapath / regfile, format="ds9")
+# -
 
 source_list = [{"Name": r.meta["label"],  "ICRS": r.center} for r in regs]
 
 import pandas as pd
 from astropy.table import Table
 
+# + jupyter={"source_hidden": true} tags=[]
 source_table = Table(source_list)
 source_table
+# -
 
 # ## Find PA to th1C
 
+# + tags=[]
 c0 = SkyCoord.from_name("* tet01 Ori C")
 
+# + tags=[]
 source_table["PA"] = source_table["ICRS"].position_angle(c0).to(u.deg)
 source_table["Sep"] = source_table["ICRS"].separation(c0).to(u.arcsec)
 source_table.add_index("Name")
 
+# + jupyter={"source_hidden": true} tags=[]
 source_table
+# -
 
 source_table.loc[source]
 
