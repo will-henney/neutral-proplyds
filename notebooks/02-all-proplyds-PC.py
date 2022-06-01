@@ -31,6 +31,7 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.table import Table, QTable
+from astropy.nddata import Cutout2D
 import regions
 
 # ### Graphics libraries
@@ -75,7 +76,7 @@ class FilterImage:
         self.coords = self.wcs.pixel_to_world(
             *np.meshgrid(np.arange(nx), np.arange(ny))
         )
-        
+
 
 
 imdict = {
@@ -127,33 +128,161 @@ source_table.loc["177-341W"]["PA"], source_table.loc["180-331"]["Sep"]
 
 # -
 
-# ## Class to represent combination of a proplyd and an image in a particular filter
+# ## Cutout image of a proplyd in a particular filter
 
-class ProplydImage:
+# + [markdown] tags=[]
+# We use `astropy.nddata.Cutout2D` to make cutouts of the sharp image, the smooth image, and the coordinate array. 
+# -
+
+class ProplydCutout:
     
-    def __init__(self, pdata, image: FilterImage):
-        self.c = pdata["ICRS"]
-        self.pa = pdata["PA"]
+    def __init__(self, pdata, image: FilterImage, size=2 * u.arcsec):
+        self.center = pdata["ICRS"]
+        self.pa_star = pdata["PA"]
         self.sep = pdata["Sep"]
-        self.image = image
-
+        self.pname = pdata["Name"]
+        self.fname = image.name
+        self.size = size
+        self.cutout = Cutout2D(
+            image.data, position=self.center, size=size, wcs=image.wcs, copy=True,
+        )
+        self.image = self.cutout.data
+        self.wcs = self.cutout.wcs
+        # Use the slices from this cutout to also get cutout of the smoothed data array
+        self.smooth_image = image.sdata[self.cutout.slices_original]
+        # ... and the same for the coordinates
+        self.image_coords = image.coords[self.cutout.slices_original]
+        # Radius and PA of each pixel with respect to the center
+        self.r = self.center.separation(self.image_coords)
+        self.pa = self.center.position_angle(self.image_coords)
+        # Default mask has max radius of half of cutout size
+        self.set_mask(r_out=self.size / 2)
+        self.owcs = self.get_ortho_wcs()
+        
+    def __repr__(self):
+        return f"ProplydCutout({self.pname}, {self.fname})"
+       
+    def get_ortho_wcs(self):
+        """Auxilary WCS that is orthogonal to RA, Dec
+        
+        Pixel size is 1 arcsec. 
+        Origin is set at corner pixel, 
+        which is (1, 1) in FITS, but is (0, 0) in python
+        """
+        wcs = WCS(naxis=2)
+        wcs.wcs.cdelt = [-1/3600, 1/3600]
+        wcs.wcs.crval = [self.center.ra.deg, self.center.dec.deg]
+        wcs.wcs.crpix = [1, 1]
+        wcs.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+        return wcs
+         
     def set_mask(
         self,
         r_out = 1.0 * u.arcsec,
         r_in = 0.1 * u.arcsec,
         mu_min = -0.2,
     ):
-        r = self.c.separation(self.image.coords)
-        pa = self.c.position_angle(self.image.coords)
-        cth = np.cos((pa - self.pa))
-        self.mask = (r <= r_out) & ((cth >= mu_min) | (r <= r_in))
+        cth = np.cos((self.pa - self.pa_star))
+        self.mask = (self.r <= r_out) & ((cth >= mu_min) | (self.r <= r_in))
 
 
-# ## Do the profiles
+# Test that the cutout works:
 
-source_data = source_table.loc["177-341W"]
+p = ProplydCutout(source_table.loc["177-341W"], imdict["f547m"])
 
+# We can plot it with imshow, but that is rotated with respect to equatorial axes.
+
+fig, ax = plt.subplots(subplot_kw=dict(projection=p.wcs))
+ax.imshow(p.image, vmin=0, vmax=15, cmap="gray_r")
+...;
+
+# We can use the orthogonal wcs and pcolormesh to rotate the image so that axes are aligned with RA and Dec.
+
+fig, ax = plt.subplots(
+    figsize=(6, 6),
+    subplot_kw=dict(projection=p.owcs),
+)
+T = ax.get_transform("world")
+ax.pcolormesh(
+    p.image_coords.ra.deg,
+    p.image_coords.dec.deg,
+    np.where(p.mask, p.image, np.nan), 
+    vmin=0, 
+    vmax=10, 
+    cmap="gray_r",
+    shading="nearest",
+    transform=T,
+)
+ax.scatter(
+    p.center.ra.deg, 
+    p.center.dec.deg, 
+    transform=T, 
+    color='r', 
+    marker="+",
+    s=300,
+)
+ax.set_aspect("equal")
+ax.set(
+    xlim=[-1, 1],
+    ylim=[-1, 1],
+)
+...;
+
+# ## Make cutout for all proplyds and all filters
+#
+# Add them in to the table of sources
+
+for fname in pcfilters:
+    source_table[fname] = [ProplydCutout(row, imdict[fname]) for row in source_table]
+
+source_table[pcfilters]
 
 # ## Do the images
+
+np = len(source_table)
+ns = len(pcfilters)
+fig, axes = plt.subplots(np, ns, figsize=(3 * ns, 3 * np))
+for j, row in enumerate(source_table):
+    for i, fname in enumerate(pcfilters):
+        ax = axes[j, i]
+        ax.imshow(row[fname].image**0.5, vmin=0.8, vmax=10, cmap="magma_r", origin='lower')
+        ax.text(0.05, 0.95, fname.upper(), transform=ax.transAxes, va="top", ha="left")
+        ax.text(0.95, 0.05, row["Name"], transform=ax.transAxes, va="bottom", ha="right")
+        ax.set(xticks=[], yticks=[])
+sns.despine(left=True, bottom=True)
+fig.tight_layout(pad=0, h_pad=0, w_pad=0)
+
+# + [markdown] tags=[]
+# ## Do the profiles
+# -
+
+np = len(source_table)
+ns = len(pcfilters)
+fig, axes = plt.subplots(np, ns, figsize=(3 * ns, 2.0 * np), sharex=True, sharey='row')
+for j, row in enumerate(source_table):
+    for i, fname in enumerate(pcfilters):
+        p = row[fname]
+        ax = axes[j, i]
+        m = p.mask
+        ax.scatter(
+            p.r.arcsec[m], p.image[m],
+            c=(p.pa - p.pa_star)[m],
+            alpha=0.5,
+            cmap="magma_r",
+            s=20,
+        )
+        ax.text(1.0, 0.8, fname.upper(), transform=ax.transAxes, va="top", ha="right")
+        ax.text(1.0, 1.0, row["Name"], transform=ax.transAxes, va="top", ha="right")
+        ax.set(ylim=[0.0, None])
+sns.despine()
+fig.tight_layout(h_pad=0.3, w_pad=0.3)
+
+# I have made sure that all the profiles in the same row share a common y scale, so that we can easily compare the different profiles. 
+#
+# We can see that in many cases the 631 profile is significantly higher than the sum of the 547 and the 656.  This is good evidence that we are seeing [O I] from the neutral disk wind. 
+#
+# Not all sources show this however. For instance, 167-317 is pretty dominated by Ha.
+#
+# Next step is some sort of spatial averaging of the profiles. 
 
 
