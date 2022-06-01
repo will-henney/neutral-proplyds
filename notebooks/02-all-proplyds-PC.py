@@ -155,7 +155,7 @@ class ProplydCutout:
         # Radius and PA of each pixel with respect to the center
         self.r = self.center.separation(self.image_coords)
         self.pa = self.center.position_angle(self.image_coords)
-        # Default mask has max radius of half of cutout size
+        # Default mask has max radius of half the cutout size
         self.set_mask(r_out=self.size / 2)
         self.owcs = self.get_ortho_wcs()
         
@@ -239,9 +239,9 @@ source_table[pcfilters]
 
 # ## Do the images
 
-np = len(source_table)
+nprops = len(source_table)
 ns = len(pcfilters)
-fig, axes = plt.subplots(np, ns, figsize=(3 * ns, 3 * np))
+fig, axes = plt.subplots(nprops, ns, figsize=(3 * ns, 3 * nprops))
 for j, row in enumerate(source_table):
     for i, fname in enumerate(pcfilters):
         ax = axes[j, i]
@@ -256,9 +256,8 @@ fig.tight_layout(pad=0, h_pad=0, w_pad=0)
 # ## Do the profiles
 # -
 
-np = len(source_table)
-ns = len(pcfilters)
-fig, axes = plt.subplots(np, ns, figsize=(3 * ns, 2.0 * np), sharex=True, sharey='row')
+nbins = 20
+fig, axes = plt.subplots(nprops, ns, figsize=(3 * ns, 2.0 * nprops), sharex=True, sharey='row')
 for j, row in enumerate(source_table):
     for i, fname in enumerate(pcfilters):
         p = row[fname]
@@ -267,13 +266,17 @@ for j, row in enumerate(source_table):
         ax.scatter(
             p.r.arcsec[m], p.image[m],
             c=(p.pa - p.pa_star)[m],
-            alpha=0.5,
+            alpha=0.3,
             cmap="magma_r",
             s=20,
         )
+        h1, edges = np.histogram(p.r.arcsec[m], range=[0.0, 1.0], bins=nbins, weights=p.image[m])
+        h0, edges = np.histogram(p.r.arcsec[m], range=[0.0, 1.0], bins=nbins)
+        rgrid = 0.5 * (edges[1:] + edges[:-1])
+        ax.plot(rgrid, h1 / h0, drawstyle="steps-mid", linewidth=3)
         ax.text(1.0, 0.8, fname.upper(), transform=ax.transAxes, va="top", ha="right")
         ax.text(1.0, 1.0, row["Name"], transform=ax.transAxes, va="top", ha="right")
-        ax.set(ylim=[0.0, None])
+        ax.set(ylim=[0.0, None], xlim=[0.0, None])
 sns.despine()
 fig.tight_layout(h_pad=0.3, w_pad=0.3)
 
@@ -283,6 +286,155 @@ fig.tight_layout(h_pad=0.3, w_pad=0.3)
 #
 # Not all sources show this however. For instance, 167-317 is pretty dominated by Ha.
 #
-# Next step is some sort of spatial averaging of the profiles. 
+# We have also added a spatial averaging of the profiles, calculated using a weighted histogram. 
+
+# Test method for determining bin edges that is robust to rounding errors:
+
+# +
+bin_size = 0.05
+epsilon = 0.01 # Fake rounding error
+rmin = 0.0 + epsilon
+rmax = 1.0 - epsilon
+
+nbins = int(np.round((rmax - rmin) / bin_size))
+edges = np.arange(nbins + 1) * bin_size
+edges
+# -
+
+r = 0.5 * (edges[1:] + edges[:-1])
+Table({"r": r})
+
+
+# +
+class ProplydProfiles:
+    """
+    Radial profiles of proplyd brightness for multiple filters
+    
+    All interpolated onto a common grid of radial points
+    """
+    bin_size = 0.05
+    
+    def __init__(self, data, fnames):
+        # Setup the radial bins
+        rmax = data["f631n"].size.to(u.arcsec).value / 2
+        rmin = 0.0
+        nbins = int(np.round((rmax - rmin) / bin_size))
+        edges = np.arange(nbins + 1) * bin_size
+        # Convert to cell centers
+        self.r = 0.5 * (edges[1:] + edges[:-1])
+        # Initialize Tables to hold results
+        self.mean = Table({"r": r})
+        self.sigma = Table({"r": r})
+        self.npix = Table({"r": r})
+        # Copy some metadata from the proplyd
+        self.name = data["Name"]
+        # Process each filter
+        for fname in fnames:
+            p = data[fname]
+            m = p.mask
+            # Use weighted histograms to get mean and stddev
+            h1, _ = np.histogram(
+                p.r.arcsec[m], 
+                range=[rmin, rmax], 
+                bins=edges, 
+                weights=p.image[m],
+            )
+            h0, _ = np.histogram(
+                p.r.arcsec[m], 
+                range=[rmin, rmax], 
+                bins=edges, 
+                weights=None,
+            )
+            h2, _ = np.histogram(
+                p.r.arcsec[m], 
+                range=[rmin, rmax], 
+                bins=edges, 
+                weights=p.image[m]**2,
+            )
+            # Number of image pixels that contribute to each radial bin
+            self.npix[fname] = h0
+            # Mean brightness in each radial bin
+            self.mean[fname] = h1 / h0
+            # Standard deviation of brightness in each radial bin
+            self.sigma[fname] = np.sqrt((h2 / h0) - (h1 / h0)**2)
+
+            
+
+        
+
+        
+
+# + tags=[]
+pp = ProplydProfiles(source_table.loc["177-341W"], pcfilters)
+# -
+
+pp.mean
+
+pp.npix
+
+fig, ax = plt.subplots()
+for fname in pcfilters:
+    line, = ax.plot("r", fname, data=pp.mean, label=fname.upper())
+    ax.fill_between(
+        pp.mean["r"], 
+        pp.mean[fname] - 2 * pp.sigma[fname] / np.sqrt(pp.npix[fname]), 
+        pp.mean[fname] + 2 * pp.sigma[fname] / np.sqrt(pp.npix[fname]), 
+        color=line.get_color(),
+        alpha=0.1,
+        linewidth=0,
+    )
+ax.legend()
+ax.set_title(pp.name)
+ax.set(
+    xlabel="Radius, arcsec",
+    ylabel="Brightness",
+)
+...;
+
+# ## Isolate the 6300 emission from the neutral flow
+
+# We want to subtract two things from the raw F631N brightness:
+#
+# 1. The continuum emission in the filter bandpass. This is mainly direct starlight, but will include a bit of scattered starlight and bound-free atomic continuum too. 
+#
+# 2. The [O I] 6300 line emission that comes from the ionization front instead of from the neutral gas. This should be sharply peaked at an ionization fraction of $x = 0.5$ because of the $x (1 - x)$ dependence.
+
+# For (1) we can subtract off the broader band filter F547M.  But if we only want to subtract the star part, then we can use a scaled version of Ha F656N to estimate the atomic continuum contribution. I choose a value of `atfac` so that the emission at the i-front is cancelled out. Note that this ignores the fact that F656N itself will have a small continuum contribution. 
+#
+# For (2), we can just subtract the Ha F656N profile. This will over-correct for fully ionized part of the proplyd flow, which might lead to negative parts of the profile. 
+
+atfac = 0.55
+cont = pp.mean["f547m"] - atfac * (pp.mean["f656n"] - 1)
+oin = pp.mean["f631n"] - (cont - 1) - (pp.mean["f656n"] - 1)
+sig = np.sqrt(
+    pp.sigma["f547m"]**2 / pp.npix["f547m"] 
+    + pp.sigma["f631n"]**2 / pp.npix["f631n"] 
+    + pp.sigma["f656n"]**2 / pp.npix["f656n"]
+)
+
+# +
+fig, ax = plt.subplots()
+line, = ax.plot(pp.mean["r"], oin - 1, label="residual oi", linewidth=5)
+ax.fill_between(
+    pp.mean["r"], 
+    (oin - 1) - 3 * sig, 
+    (oin - 1) + 3 * sig, 
+    color=line.get_color(),
+    alpha=0.1,
+    linewidth=0,
+)
+ax.plot(pp.mean["r"], cont - 1, label="starlight")
+ax.plot(pp.mean["r"], pp.mean["f656n"] - 1, label="ha")
+ax.plot(pp.mean["r"], pp.mean["f631n"] - 1, label="oi + cont")
+
+ax.axhline(0.0, linestyle="dashed", color="k")
+ax.legend()
+ax.set_title(pp.name)
+ax.set(
+    xlabel="Radius, arcsec",
+    ylabel="Brightness",
+)
+...;
+# -
 
 
