@@ -101,7 +101,11 @@ c0 = SkyCoord.from_name("* tet01 Ori C")
 # Extract the information that we want from the region file. Construct a list of dicts that give source name and coordinates:
 
 # + tags=[]
-source_list = [{"Name": r.meta["label"],  "ICRS": r.center} for r in regs]
+source_list = [
+    {"Name": r.meta["label"],  "ICRS": r.center} 
+    for r in regs 
+    if "label" in r.meta
+]
 # -
 
 # Convert to an `astropy.table.QTable` of the sources. Add columns for PA to θ¹ Ori C (in degrees) and Separation from θ¹ Ori C (in arcsec):
@@ -194,7 +198,6 @@ p = ProplydCutout(source_table.loc["177-341W"], imdict["f547m"])
 
 fig, ax = plt.subplots(subplot_kw=dict(projection=p.wcs))
 ax.imshow(p.image, vmin=0, vmax=15, cmap="gray_r")
-ax.scatter(0.5, 0.5, transform=ax.transAxes, color="w", marker="+", s=50)
 ax.scatter(
     p.center.ra.deg, 
     p.center.dec.deg, 
@@ -237,6 +240,9 @@ ax.set(
 )
 ...;
 
+j, i = np.unravel_index(np.argmin(p.r, axis=None), p.r.shape)
+p.r[j, i].arcsec
+
 # ## Make cutout for all proplyds and all filters
 #
 # Add them in to the table of sources
@@ -248,6 +254,7 @@ source_table[pcfilters]
 
 # ## Do the images
 
+# + tags=[]
 nprops = len(source_table)
 ns = len(pcfilters)
 fig, axes = plt.subplots(nprops, ns, figsize=(3 * ns, 3 * nprops))
@@ -260,6 +267,8 @@ for j, row in enumerate(source_table):
         p = row[fname]
         xp, yp = p.center.to_pixel(p.wcs)
         ax.scatter(xp, yp, color="w", marker="+", s=50)
+        j0, i0 = np.unravel_index(np.argmin(p.r, axis=None), p.r.shape)
+        #ax.scatter(i0, j0, color="g", marker="x", s=50)
         ax.set(xticks=[], yticks=[])
 sns.despine(left=True, bottom=True)
 fig.tight_layout(pad=0, h_pad=0.1, w_pad=0.1)
@@ -298,7 +307,9 @@ fig.tight_layout(h_pad=0.3, w_pad=0.3)
 #
 # Not all sources show this however. For instance, 167-317 is pretty dominated by Ha.
 #
-# We have also added a spatial averaging of the profiles, calculated using a weighted histogram. 
+# We have also added a spatial averaging of the profiles, calculated using a weighted histogram. This is devloped further in the following section. 
+
+# ## Put all the profiles on a common uniform grid of radii
 
 # Test method for determining bin edges that is robust to rounding errors:
 
@@ -311,10 +322,6 @@ rmax = 1.0 - epsilon
 nbins = int(np.round((rmax - rmin) / bin_size))
 edges = np.arange(nbins + 1) * bin_size
 edges
-# -
-
-r = 0.5 * (edges[1:] + edges[:-1])
-Table({"r": r})
 
 
 # +
@@ -335,11 +342,14 @@ class ProplydProfiles:
         # Convert to cell centers
         self.r = 0.5 * (edges[1:] + edges[:-1])
         # Initialize Tables to hold results
-        self.mean = Table({"r": r})
-        self.sigma = Table({"r": r})
-        self.npix = Table({"r": r})
+        self.mean = Table({"r": self.r})
+        self.sigma = Table({"r": self.r})
+        self.npix = Table({"r": self.r})
         # Copy some metadata from the proplyd
         self.name = data["Name"]
+        # Initialise dicts to hold the smooth BG mean and sigma
+        self.bgmean = {}
+        self.bgsig = {}
         # Process each filter
         for fname in fnames:
             p = data[fname]
@@ -369,6 +379,9 @@ class ProplydProfiles:
             self.mean[fname] = h1 / h0
             # Standard deviation of brightness in each radial bin
             self.sigma[fname] = np.sqrt((h2 / h0) - (h1 / h0)**2)
+            # Also save smooth BG values
+            self.bgmean[fname] = np.mean(p.smooth_image)
+            self.bgsig[fname] = np.std(p.smooth_image)            
 
             
 
@@ -383,6 +396,16 @@ pp = ProplydProfiles(source_table.loc["177-341W"], pcfilters)
 pp.mean
 
 pp.npix
+
+# Check that the BG mean and sigma are working.  Note that these still need to be flux callibrated
+
+# + tags=[]
+pp.bgmean
+# -
+
+pp.bgsig
+
+# The sigma is very small (5 to 10%) because we are sampling a region that is smaller than the smoothing scale, so we might as well ignore it. 
 
 fig, ax = plt.subplots()
 for fname in pcfilters:
@@ -415,7 +438,19 @@ ax.set(
 #
 # For (2), we can just subtract the Ha F656N profile. This will over-correct for fully ionized part of the proplyd flow, which might lead to negative parts of the profile. 
 
+# ### Pilot study of 177-341W
+
 # +
+atfac = 0.55
+cont = pp.mean["f547m"] - atfac * (pp.mean["f656n"] - 1)
+oin = pp.mean["f631n"] - (cont - 1) - (pp.mean["f656n"] - 1)
+sig = np.sqrt(
+    pp.sigma["f547m"]**2 / pp.npix["f547m"] 
+    + pp.sigma["f631n"]**2 / pp.npix["f631n"] 
+    + pp.sigma["f656n"]**2 / pp.npix["f656n"]
+)
+
+
 fig, ax = plt.subplots()
 line, = ax.plot(pp.mean["r"], oin - 1, label="residual oi", linewidth=5)
 ax.fill_between(
@@ -426,8 +461,8 @@ ax.fill_between(
     alpha=0.1,
     linewidth=0,
 )
-ax.plot(pp.mean["r"], cont - 1, label="starlight")
 ax.plot(pp.mean["r"], pp.mean["f656n"] - 1, label="ha")
+ax.plot(pp.mean["r"], cont - 1, label="starlight")
 ax.plot(pp.mean["r"], pp.mean["f631n"] - 1, label="oi + cont")
 
 ax.axhline(0.0, linestyle="dashed", color="k")
@@ -439,8 +474,66 @@ ax.set(
 )
 ...;
 
+
+# -
+
+# ### Extracting the profile of stellar continuum
+#
+# What I will try and do is to assume that beyond a certain point (say 0.2 arcsec) all the continuum is atomic and therefore proportional to Ha.  So I will calculate the average F547M/F656N in that range and use it as my `atfac` to help isolate the stellar peak at the origin.
+
+def find_atomic_factor(pp: ProplydProfiles, rstar=0.2):
+    m = pp.r >= rstar
+    f547m = np.sum(pp.mean["f547m"][m] - 1)
+    f656n = np.sum(pp.mean["f656n"][m] - 1)
+    return f547m / f656n
+
+
+pp = ProplydProfiles(source_table.loc["180-331"], pcfilters)
+find_atomic_factor(pp)
+
+# For some of the sources, this does not give a reasonable value (which I am defining as between 0.2 and 1.0), so for those I will just assume 0.5.
+
+# ### Isolated 6300 profile for all sources
+
+# + tags=[]
+weak_sources = [
+    "156-308 NEW", "174-414", "183-427", "183-419", "182-413", 
+    "175-355", "152-319", "154-321 NEW", "154-324", "179-354",
+]
+bright_sources = ["167-317", "163-317", "158-323", "171-340", "176-325"]
+
+
 # +
-atfac = 0.5
+class ProplydResults:
+    """Final results extracted from filter images"""
+    def __init__(self, pp: ProplydProfiles):
+        # Left edge of bins to improve plotting
+        self.rleft = pp.r - pp.bin_size / 2
+        self.pp = pp
+        
+        # Total profile in F631N filter
+        self.f631n = pp.mean["f631n"]
+        # Ignore potential contamination of Ha filter for now
+        self.ha = pp.mean["f656n"]
+        # Profiles of stellar continuum: subtract atomic cont from F547M
+        self.atfac = find_atomic_factor(pp)
+        if not (0.2 < self.atfac < 1.0):
+            self.atfac = 0.5
+        self.cont = pp.mean["f547m"] - self.atfac * (self.ha - 1)
+        # Do not let it go below BG 
+        self.cont = np.maximum(self.cont, 1.0)
+        # [O I] 6300 emission with continuum and i-front removed
+        self.oin = self.f631n - (self.cont - 1) - (self.ha - 1)
+        # Assume all the errors can be added in quadrature
+        self.sig = np.sqrt(
+            pp.sigma["f547m"]**2 / pp.npix["f547m"] 
+            + pp.sigma["f631n"]**2 / pp.npix["f631n"] 
+            + pp.sigma["f656n"]**2 / pp.npix["f656n"]
+        )
+         
+
+
+# +
 ncols = 3
 nrows = nprops // ncols
 
@@ -448,42 +541,90 @@ fig, axes = plt.subplots(nrows, ncols, figsize=(5 * ncols, 3 * nrows))
 
 for ax, row in zip(axes.flat, source_table):
     pp = ProplydProfiles(row, pcfilters)
-    cont = pp.mean["f547m"] - atfac * (pp.mean["f656n"] - 1)
-    oin = pp.mean["f631n"] - (cont - 1) - (pp.mean["f656n"] - 1)
-    sig = np.sqrt(
-        pp.sigma["f547m"]**2 / pp.npix["f547m"] 
-        + pp.sigma["f631n"]**2 / pp.npix["f631n"] 
-        + pp.sigma["f656n"]**2 / pp.npix["f656n"]
+    pres = ProplydResults(pp)
+    
+    oiline, = ax.plot(
+        pres.rleft, pres.oin - 1, 
+        label="residual [O I]", linewidth=5,
+        drawstyle="steps-post",
     )
-    
-    
-    line, = ax.plot(pp.mean["r"], oin - 1, label="residual oi", linewidth=5)
     ax.fill_between(
-        pp.mean["r"], 
-        (oin - 1) - 1 * sig, 
-        (oin - 1) + 1 * sig, 
-        color=line.get_color(),
+        pres.rleft, 
+        (pres.oin - 1) - 1 * pres.sig, 
+        (pres.oin - 1) + 1 * pres.sig, 
+        color=oiline.get_color(),
         alpha=0.3,
         linewidth=0,
+        step="post",
     )
-    ax.plot(pp.mean["r"], cont - 1, label="starlight")
-    ax.plot(pp.mean["r"], pp.mean["f656n"] - 1, label="ha")
+    haline, = ax.plot(
+        pres.rleft, pres.ha - 1, 
+        label="Hα",
+        drawstyle="steps-post",
+    )
+    cline, = ax.plot(
+        pres.rleft, pres.cont - 1, 
+        label="starlight",         
+        drawstyle="steps-post",
+        color="g",
+        linestyle="dashed",
+        linewidth=3,
+    )
+    ax.fill_between(
+        pres.rleft, 
+        0.0, 
+        pres.cont - 1, 
+        color=cline.get_color(),
+        alpha=0.1,
+        linewidth=0,
+        step="post",
+    )
+    oiline2, = ax.plot(
+        pres.rleft, pres.f631n - 1, 
+        label="F631N",         
+        drawstyle="steps-post",
+        color=oiline.get_color(),
+        linewidth=1,
+    )
+
+
     #ax.plot(pp.mean["r"], pp.mean["f631n"] - 1, label="oi + cont")
 
-    ax.axhline(0.0, linestyle="dashed", color="k")
+    ax.axhline(0.0, linewidth=1, color="k")
     
     #ax.legend()
-    ax.text(1.0, 1.0, row["Name"], transform=ax.transAxes, va="top", ha="right")
-    ax.set(ylim=[-2, 10])
+    label = row['Name']
+    label += "\n" + f"[O I] BG = {pp.bgmean['f631n']:.2f}"
+    label += "\n" + f"Hα BG = {pp.bgmean['f656n']:.2f}"
 
-    
-axes[-1, 0].set(
-    xlabel="Radius, arcsec",
-    ylabel="Brightness",
+    ax.text(1.0, 1.0, label, transform=ax.transAxes, va="top", ha="right")
+    if row['Name'] in weak_sources:
+        yscale = 2.0
+    elif row['Name'] in bright_sources:
+        yscale = 25.0
+    else:
+        yscale = 12.0
+    ax.set(ylim=[-yscale / 5, yscale])
+
+
+for ax in axes[-1, :]:
+    ax.set(xlabel="Radius, arcsec")
+for ax in axes[:, 0]:
+    ax.set(ylabel="Brightness / BG")
+
+fig.legend(
+    handles=[oiline2, oiline, haline, cline], 
+    ncol=4, 
+    loc="lower center",
+    bbox_to_anchor=(0.5, 1.0),
 )
+
 sns.despine()
 fig.tight_layout()
 ...;
 # -
 
+
+
+# + tags=[]
 
