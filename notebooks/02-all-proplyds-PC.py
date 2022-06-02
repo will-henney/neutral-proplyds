@@ -180,7 +180,7 @@ class ProplydCutout:
         self,
         r_out = 1.0 * u.arcsec,
         r_in = 0.1 * u.arcsec,
-        mu_min = -0.2,
+        mu_min = -0.0,
     ):
         cth = np.cos((self.pa - self.pa_star))
         self.mask = (self.r <= r_out) & ((cth >= mu_min) | (self.r <= r_in))
@@ -194,6 +194,15 @@ p = ProplydCutout(source_table.loc["177-341W"], imdict["f547m"])
 
 fig, ax = plt.subplots(subplot_kw=dict(projection=p.wcs))
 ax.imshow(p.image, vmin=0, vmax=15, cmap="gray_r")
+ax.scatter(0.5, 0.5, transform=ax.transAxes, color="w", marker="+", s=50)
+ax.scatter(
+    p.center.ra.deg, 
+    p.center.dec.deg, 
+    transform=ax.get_transform("world"), 
+    color='r', 
+    marker="+",
+    s=50,
+)
 ...;
 
 # We can use the orthogonal wcs and pcolormesh to rotate the image so that axes are aligned with RA and Dec.
@@ -248,9 +257,12 @@ for j, row in enumerate(source_table):
         ax.imshow(row[fname].image**0.5, vmin=0.8, vmax=10, cmap="magma_r", origin='lower')
         ax.text(0.05, 0.95, fname.upper(), transform=ax.transAxes, va="top", ha="left")
         ax.text(0.95, 0.05, row["Name"], transform=ax.transAxes, va="bottom", ha="right")
+        p = row[fname]
+        xp, yp = p.center.to_pixel(p.wcs)
+        ax.scatter(xp, yp, color="w", marker="+", s=50)
         ax.set(xticks=[], yticks=[])
 sns.despine(left=True, bottom=True)
-fig.tight_layout(pad=0, h_pad=0, w_pad=0)
+fig.tight_layout(pad=0, h_pad=0.1, w_pad=0.1)
 
 # + [markdown] tags=[]
 # ## Do the profiles
@@ -399,18 +411,9 @@ ax.set(
 #
 # 2. The [O I] 6300 line emission that comes from the ionization front instead of from the neutral gas. This should be sharply peaked at an ionization fraction of $x = 0.5$ because of the $x (1 - x)$ dependence.
 
-# For (1) we can subtract off the broader band filter F547M.  But if we only want to subtract the star part, then we can use a scaled version of Ha F656N to estimate the atomic continuum contribution. I choose a value of `atfac` so that the emission at the i-front is cancelled out. Note that this ignores the fact that F656N itself will have a small continuum contribution. 
+# For (1) we can subtract off the broader band filter F547M.  But if we only want to subtract the star part, then we can use a scaled version of Ha F656N to estimate the atomic continuum contribution. I choose a value of `atfac` so that the emission at the i-front is cancelled out. Note that this ignores the fact that F656N itself will have a small continuum contribution. *This does not work very well – I am going to try to calculate it better*
 #
 # For (2), we can just subtract the Ha F656N profile. This will over-correct for fully ionized part of the proplyd flow, which might lead to negative parts of the profile. 
-
-atfac = 0.55
-cont = pp.mean["f547m"] - atfac * (pp.mean["f656n"] - 1)
-oin = pp.mean["f631n"] - (cont - 1) - (pp.mean["f656n"] - 1)
-sig = np.sqrt(
-    pp.sigma["f547m"]**2 / pp.npix["f547m"] 
-    + pp.sigma["f631n"]**2 / pp.npix["f631n"] 
-    + pp.sigma["f656n"]**2 / pp.npix["f656n"]
-)
 
 # +
 fig, ax = plt.subplots()
@@ -434,6 +437,52 @@ ax.set(
     xlabel="Radius, arcsec",
     ylabel="Brightness",
 )
+...;
+
+# +
+atfac = 0.5
+ncols = 3
+nrows = nprops // ncols
+
+fig, axes = plt.subplots(nrows, ncols, figsize=(5 * ncols, 3 * nrows))
+
+for ax, row in zip(axes.flat, source_table):
+    pp = ProplydProfiles(row, pcfilters)
+    cont = pp.mean["f547m"] - atfac * (pp.mean["f656n"] - 1)
+    oin = pp.mean["f631n"] - (cont - 1) - (pp.mean["f656n"] - 1)
+    sig = np.sqrt(
+        pp.sigma["f547m"]**2 / pp.npix["f547m"] 
+        + pp.sigma["f631n"]**2 / pp.npix["f631n"] 
+        + pp.sigma["f656n"]**2 / pp.npix["f656n"]
+    )
+    
+    
+    line, = ax.plot(pp.mean["r"], oin - 1, label="residual oi", linewidth=5)
+    ax.fill_between(
+        pp.mean["r"], 
+        (oin - 1) - 1 * sig, 
+        (oin - 1) + 1 * sig, 
+        color=line.get_color(),
+        alpha=0.3,
+        linewidth=0,
+    )
+    ax.plot(pp.mean["r"], cont - 1, label="starlight")
+    ax.plot(pp.mean["r"], pp.mean["f656n"] - 1, label="ha")
+    #ax.plot(pp.mean["r"], pp.mean["f631n"] - 1, label="oi + cont")
+
+    ax.axhline(0.0, linestyle="dashed", color="k")
+    
+    #ax.legend()
+    ax.text(1.0, 1.0, row["Name"], transform=ax.transAxes, va="top", ha="right")
+    ax.set(ylim=[-2, 10])
+
+    
+axes[-1, 0].set(
+    xlabel="Radius, arcsec",
+    ylabel="Brightness",
+)
+sns.despine()
+fig.tight_layout()
 ...;
 # -
 
