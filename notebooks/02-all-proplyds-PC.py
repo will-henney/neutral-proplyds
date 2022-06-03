@@ -495,6 +495,8 @@ find_atomic_factor(pp)
 
 # ### Isolated 6300 profile for all sources
 
+# Make lists of sources that  are particularly weak or particularly strong, since we will need to change the plot limits for those.
+
 # + tags=[]
 weak_sources = [
     "156-308 NEW", "174-414", "183-427", "183-419", "182-413", 
@@ -507,6 +509,7 @@ bright_sources = ["167-317", "163-317", "158-323", "171-340", "176-325"]
 class ProplydResults:
     """Final results extracted from filter images"""
     def __init__(self, pp: ProplydProfiles):
+        self.r = pp.r
         # Left edge of bins to improve plotting
         self.rleft = pp.r - pp.bin_size / 2
         self.pp = pp
@@ -532,12 +535,15 @@ class ProplydResults:
         )
          
 
+# -
+
+# Make plots of the profiles for each source. 
 
 # +
-ncols = 3
+ncols = 5
 nrows = nprops // ncols
 
-fig, axes = plt.subplots(nrows, ncols, figsize=(5 * ncols, 3 * nrows))
+fig, axes = plt.subplots(nrows, ncols, figsize=(4 * ncols, 2.5 * nrows))
 
 for ax, row in zip(axes.flat, source_table):
     pp = ProplydProfiles(row, pcfilters)
@@ -564,9 +570,9 @@ for ax, row in zip(axes.flat, source_table):
     )
     cline, = ax.plot(
         pres.rleft, pres.cont - 1, 
-        label="starlight",         
+        label="stellar continuum",         
         drawstyle="steps-post",
-        color="g",
+        color="r",
         linestyle="dashed",
         linewidth=3,
     )
@@ -587,10 +593,11 @@ for ax, row in zip(axes.flat, source_table):
         linewidth=1,
     )
 
-
     #ax.plot(pp.mean["r"], pp.mean["f631n"] - 1, label="oi + cont")
 
     ax.axhline(0.0, linewidth=1, color="k")
+    ax.axvline(0.0, linewidth=1, color="k")
+
     
     #ax.legend()
     label = row['Name']
@@ -622,9 +629,80 @@ fig.legend(
 sns.despine()
 fig.tight_layout()
 ...;
-# -
 
 
+# +
+def calculate_fluxes(pr: ProplydResults):
+    """Sum the brightness profiles to get fluxes
+    
+    Mutates the ProplydResults object by adding new fields
+    """
+
+    # Only bins with ha greater than BG to avoid shadow disks
+    mha = pr.ha >= 1.0
+    # Total flux in detector units DN/s 
+    pr.flux_ha = np.sum(
+        ((pr.ha - 1) * pr.pp.npix["f656n"])[mha]
+    ) * pr.pp.bgmean['f656n']
+    pr.r_ha = np.average(pr.r[mha], weights=(pr.ha[mha] - 1))
+    
+    pr.flux_cont = np.sum(
+        (pr.cont - 1) * pr.pp.npix["f547m"]
+    ) * pr.pp.bgmean['f547m']
+    try:
+        pr.r_cont = np.average(pr.r, weights=(pr.cont - 1))
+    except ZeroDivisionError:
+        pr.r_cont = np.nan
+
+    
+    # Only bins with oi greater than BG and radius up the mean Ha radius
+    moi = (pr.oin >= 1.0) & (pr.r < pr.r_ha)
+    
+    # Same but plus or minus sigma
+    moi_hi = (pr.oin + pr.sig >= 1.0) & (pr.r < pr.r_ha)
+    moi_lo = (pr.oin - pr.sig >= 1.0) & (pr.r < pr.r_ha)
+    
+    pr.flux_oi = np.sum(
+        ((pr.oin - 1) * pr.pp.npix["f631n"])[moi]
+    ) * pr.pp.bgmean['f631n']
+    try:
+        pr.r_oi = np.average(pr.r[moi], weights=(pr.oin[moi] - 1))
+    except ZeroDivisionError:
+        pr.r_oi = np.nan
+
+
+    # Upper limit
+    pr.flux_oi_hi = np.sum(
+        ((pr.oin - 1 + pr.sig) * pr.pp.npix["f631n"])[moi_hi]
+    ) * pr.pp.bgmean['f631n']
+    # Lower limit
+    pr.flux_oi_lo = np.sum(
+        ((pr.oin - 1 - pr.sig) * pr.pp.npix["f631n"])[moi_lo]
+    ) * pr.pp.bgmean['f631n']
+    
+    # Save number of bins that contribute to each measurement
+    pr.nha = np.sum(mha)
+    pr.noi = np.sum(moi)
+    pr.noi_lo = np.sum(moi_lo)
+    pr.noi_hi = np.sum(moi_hi)
+
+
+
+
+    
+    
 
 # + tags=[]
+pp = ProplydProfiles(source_table[18], pcfilters)
+pres = ProplydResults(pp)
+calculate_fluxes(pres)
+
+# -
+
+pres.r_ha, pres.r_cont, pres.r_oi
+
+pres.flux_ha, pres.flux_cont, pres.flux_oi, pres.flux_oi_lo, pres.flux_oi_hi 
+
+pres.nha, pres.noi, pres.noi_lo, pres.noi_hi
+
 
