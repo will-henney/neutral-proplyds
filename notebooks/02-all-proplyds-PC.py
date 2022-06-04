@@ -631,36 +631,46 @@ fig.tight_layout()
 ...;
 
 
-# +
+# -
+
+# ## Calculate the final fluxes for each proplyd
+#
+# We can sum the radial brightness profile multiplied by the number of pixels that contributed to each radial bin. This will give us the total flux in detector units (we still need to do the absolute flux callibration afterwards). We do this for three profiles: Hα, neutral [O I], and stellar continuum. 
+#
+# We will also calculate the mean brightness-weighted radius of each profile. 
+#
+# There are a few details that we need to consider: masking and errors/upper limits.  For Hα we mask out bins that have brightness below the BG value. This is so that we are not affected by the shadow disks, which would give negative brightness after BG subtraction. This mainly only effects 182-413.
+#
+# For [O I] we only include radii up to the 1.5 times the mean radius in Hα so that we are not affected by noise or unrelated emission at larger radii. We also only include bins where the residual oi emission exceeds the BG value. We do separate calculations (with separate masks) for the central value and for +/- 1 sigma. In some cases there will be no bins where _mean minus sigma_ exceeds the BG, so we count these as non-detections, but we still have upper limits from the _mean plus sigma_. I do not do any reduction of the sigma from averaging multiple bins since the uncertainties are systematic, at least in part. (Although this means that we are probably overestimating the error bars for the larger proplyds).
+
 def calculate_fluxes(pr: ProplydResults):
     """Sum the brightness profiles to get fluxes
     
     Mutates the ProplydResults object by adding new fields
     """
 
-    # Only bins with ha greater than BG to avoid shadow disks
-    mha = pr.ha >= 1.0
-    # Total flux in detector units DN/s 
+    # Only bins with Ha greater than 1.1 x BG to avoid shadow disks and spurious stuff
+    mha = pr.ha >= 1.1
+    # Total BG-subtracted flux in detector units DN/s 
     pr.flux_ha = np.sum(
         ((pr.ha - 1) * pr.pp.npix["f656n"])[mha]
     ) * pr.pp.bgmean['f656n']
-    pr.r_ha = np.average(pr.r[mha], weights=(pr.ha[mha] - 1))
-    
-    pr.flux_cont = np.sum(
-        (pr.cont - 1) * pr.pp.npix["f547m"]
-    ) * pr.pp.bgmean['f547m']
+    # Mean radius of the Ha emission
     try:
-        pr.r_cont = np.average(pr.r, weights=(pr.cont - 1))
+        pr.r_ha = np.average(pr.r[mha], weights=(pr.ha[mha] - 1))
     except ZeroDivisionError:
-        pr.r_cont = np.nan
-
+        # Case where mask is all false
+        pr.r_ha = np.nan
     
-    # Only bins with oi greater than BG and radius up the mean Ha radius
-    moi = (pr.oin >= 1.0) & (pr.r < pr.r_ha)
+        
+    # Only bins with oi greater than BG 
+    # and only radii up to a certain factor times the mean Ha radius
+    rfac = 1.5
+    moi = (pr.oin >= 1.0) & (pr.r < rfac * pr.r_ha)
     
     # Same but plus or minus sigma
-    moi_hi = (pr.oin + pr.sig >= 1.0) & (pr.r < pr.r_ha)
-    moi_lo = (pr.oin - pr.sig >= 1.0) & (pr.r < pr.r_ha)
+    moi_hi = (pr.oin + pr.sig >= 1.0) & (pr.r < rfac * pr.r_ha)
+    moi_lo = (pr.oin - pr.sig >= 1.0) & (pr.r < rfac * pr.r_ha)
     
     pr.flux_oi = np.sum(
         ((pr.oin - 1) * pr.pp.npix["f631n"])[moi]
@@ -668,8 +678,8 @@ def calculate_fluxes(pr: ProplydResults):
     try:
         pr.r_oi = np.average(pr.r[moi], weights=(pr.oin[moi] - 1))
     except ZeroDivisionError:
+        # Case where mask is all false
         pr.r_oi = np.nan
-
 
     # Upper limit
     pr.flux_oi_hi = np.sum(
@@ -679,30 +689,201 @@ def calculate_fluxes(pr: ProplydResults):
     pr.flux_oi_lo = np.sum(
         ((pr.oin - 1 - pr.sig) * pr.pp.npix["f631n"])[moi_lo]
     ) * pr.pp.bgmean['f631n']
-    
+
+    # Repeat for the stellar continuum
+    mcont = (pr.cont >= 1.0) & (pr.r < rfac * pr.r_ha)
+    pr.flux_cont = np.sum(
+        ((pr.cont - 1) * pr.pp.npix["f547m"])[mcont]
+    ) * pr.pp.bgmean['f547m']
+    try:
+        pr.r_cont = np.average(pr.r[mcont], weights=(pr.cont[mcont] - 1))
+    except ZeroDivisionError:
+        # Case where mask is all false
+        pr.r_cont = np.nan
+
     # Save number of bins that contribute to each measurement
     pr.nha = np.sum(mha)
     pr.noi = np.sum(moi)
     pr.noi_lo = np.sum(moi_lo)
     pr.noi_hi = np.sum(moi_hi)
-
-
-
-
+    pr.ncont = np.sum(mcont)
     
-    
+    return pr
+
+
+# Test it out for a few of the proplyds
 
 # + tags=[]
-pp = ProplydProfiles(source_table[18], pcfilters)
-pres = ProplydResults(pp)
-calculate_fluxes(pres)
-
+pres = calculate_fluxes(
+    ProplydResults(
+        ProplydProfiles(source_table[27], pcfilters)
+    )
+)
 # -
 
 pres.r_ha, pres.r_cont, pres.r_oi
 
 pres.flux_ha, pres.flux_cont, pres.flux_oi, pres.flux_oi_lo, pres.flux_oi_hi 
 
-pres.nha, pres.noi, pres.noi_lo, pres.noi_hi
+pres.nha, pres.noi, pres.noi_lo, pres.noi_hi, pres.ncont
+
+# OK, that seems to be working more or less as designed.
+
+# ## Table of final results
+
+results = []
+for row in source_table:
+    pres = calculate_fluxes(
+        ProplydResults(
+            ProplydProfiles(row, pcfilters)
+        )
+    )    
+    results.append(
+        {
+            "Name": pres.pp.name.split()[0],
+            "Sep": row["Sep"],
+            "F_ha": pres.flux_ha,
+            "F_oi": pres.flux_oi,
+            "F_oi_lo": pres.flux_oi_lo,
+            "F_oi_hi": pres.flux_oi_hi,
+            "F_cont": pres.flux_cont,
+            "r_ha": pres.r_ha * u.arcsec,
+            "r_oi": pres.r_oi * u.arcsec,
+            "r_cont": pres.r_cont * u.arcsec,
+            "s/n": pres.flux_oi / (pres.flux_oi_hi - pres.flux_oi)
+        }
+    )
+results_table = QTable(results)
+results_table.add_index("Name")
+for col in results_table.itercols():
+    if col.info.unit == "arcsec":
+        col.info.format = ".2f"
+    if col.info.name.startswith("F_"):
+        col.info.format = ".3g"
+    if col.info.name in ["s/n"]:
+        col.info.format = ".2f"
+
+results_table.info
+
+upper_limits = results_table["F_oi_lo"] <= 0.0
+results_table["F_oi"][upper_limits] = np.nan
+invalid_cont = results_table["F_cont"] <= 0.0
+results_table["F_cont"][invalid_cont] = np.nan
+
+# + tags=[]
+results_table.show_in_notebook()
+# -
+
+fig, axes = plt.subplots(3, 1, sharex=True, figsize=(10, 9))
+axes[0].scatter(
+    "Sep",
+    "F_ha",
+    data=results_table,
+    s=30 * results_table["r_ha"] / 0.05,
+    c="r_ha",
+    cmap="magma_r",
+)
+axes[1].scatter(
+    "Sep",
+    "F_oi",
+    data=results_table,
+    s=30 * results_table["s/n"] * results_table["r_oi"] / 0.05,
+    c="r_oi",
+    cmap="magma_r",
+)
+for row in results_table:
+    if np.isfinite(row["F_oi"]):
+        axes[1].plot(
+            [row["Sep"].value, row["Sep"].value],
+            [row["F_oi_lo"], row["F_oi_hi"]],
+            color="r",
+            alpha=0.4,
+        )
+    else:
+        axes[1].scatter(
+            row["Sep"].value,
+            row["F_oi_hi"],
+            marker="$\downarrow$",
+            color="r",
+            s=100,
+            alpha=0.4,
+        )
+axes[2].scatter(
+    "Sep",
+    "F_cont",
+    data=results_table,
+    c="r_cont",
+    cmap="inferno",
+)
+for ax in axes:
+    ax.set(
+        xscale="log",
+        yscale="log",
+        xlim=[4.0, 100.0],
+    )
+axes[-1].set_xlabel("Separation from th1C, arcsec")
+axes[0].set_ylabel("Ha flux")
+axes[1].set_ylabel("[O I] 6300 flux")
+axes[2].set_ylabel("Continuum flux")
+...;
+
+fig, ax = plt.subplots(figsize=(8, 8))
+ax.scatter(
+    "F_ha",
+    "F_oi",
+    data=results_table,
+    s=30 * results_table["s/n"] * results_table["r_oi"] / 0.05,    
+)
+th = 0.5
+for row in results_table:
+    if np.isfinite(row["F_oi"]):
+        ax.plot(
+            [row["F_ha"], row["F_ha"]],
+            [row["F_oi_lo"], row["F_oi_hi"]],
+            color="r",
+            alpha=0.4,
+        )
+    else:
+        ax.scatter(
+            row["F_ha"],
+            row["F_oi_hi"],
+            marker="$\downarrow$",
+            color="r",
+            s=100,
+            alpha=0.4,
+        )
+    if row["s/n"] > 2.0:
+        ax.annotate(
+            row["Name"],
+            (row["F_ha"], row["F_oi"]),
+            xytext=(20 * np.cos(th), 20 * np.sin(th)), 
+            textcoords='offset points',
+            ha="center",
+            va="center",
+            fontsize=12,
+        )
+        th += 2.5
+ax.set(
+    xlabel="Ha flux",
+    ylabel="[O I] 6300 flux",
+    xscale="log",
+    yscale="log",
+)
+...;
+
+fig, ax = plt.subplots(figsize=(8, 8))
+ax.scatter(
+    "r_ha",
+    "r_oi",
+    data=results_table,
+    s=30 * results_table["s/n"] * results_table["r_oi"] / 0.05,    
+)
+ax.plot([0, 0.7], [0, 0.7])
+ax.set(
+    xlabel="Ha mean radius, arcsec",
+    ylabel="[O I] 6300 mean radius, arcsec",
+    xlim=[0, 0.7],
+    ylim=[0, 0.7],
+)
 
 
