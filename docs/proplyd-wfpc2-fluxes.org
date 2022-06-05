@@ -180,8 +180,92 @@ CLOSED: [2022-05-31 Tue 09:23]
   - Note that the coordinates are for the PC mosaic, which is still not perfectly aligned with Robberto in some places, especially in the S near 182-413
 
 
-** TODO Extract the radial profiles
+** DONE Extract the radial profiles
+CLOSED: [2022-06-04 Sat 13:20]
 - There is a pilot version done in the notebook
   - [[file:../notebooks/00-profiles-PC.py]]
 - Next job is to do it for all the filters and sources
+  - [[file:../notebooks/02-all-proplyds-PC.py]]
+  - Now done with fluxes in detector units
   
+
+
+** Absolute flux calibration
+- I see three possible approaches
+  1. Use the photometric keywords in header to get mean flux per angstrom, then multiply by effective width of filter to get the line flux
+  2. Use the results from O'Dell & Doi (2004)
+  3. Use the MUSE image to get absolute fluxes
+- I think 2 would be the easiest, except that *they do not include the F631N filter*
+  - In fact they explain why it is problematic to measure 6300 with that filter (weak line, wide filter, strongly influenced by continuum)
+  - So, we will try 1 first
+  - Although now that I think about it, the MUSE approach might be the easiest
+    - We only need to calibrate the BG nebula, which should be easy.
+    - Although, we do need to know the effective width of the filter too
+
+
+** Properties of the WFPC2 filters
+- From the Instrument Handbook I get the following
+  | Filter | mean wav | width | peak trans | peak wav |  Q Tmax |
+  |--------+----------+-------+------------+----------+---------|
+  | F631N  |     6306 |  30.9 |       85.7 |     6301 | 0.12632 |
+  | F656N  |     6564 |  21.5 |       77.8 |     6562 | 0.11273 |
+  | F547M  |     5446 | 486.6 |       91.3 |     5360 | 0.11515 |
+  | F673N  |     6732 |  47.2 |       87.0 |     6732 | 0.11978 |
+  | F658N  |     6591 |  28.5 |       79.7 |     6591 | 0.11443 |
+- For strong lines we can use equation 6.4 of the Instrument Handbook, which gives the count rate for an emission line source as R = 2.3e12 QT F \lambda
+  - where QT will be approximately QTmax from the table since the lines wavelength is close to the peak transmission
+  - R is in electron/s
+  - F is line flux in erg/cm2/s
+  - \lambda is line wavelength in \AA
+  - They give a worked example for the Ha line:
+    - F = 1e-16 erg/cm2/s
+    - R = 2.3e12 0.11273 1e-16 6563 = 0.17 elec/s
+  - I am not quite sure why the gain does not factor in here. Presumably it is included in the Q factor
+- Exposure times according to the headers
+  | Filter | Exp time |
+  |--------+----------|
+  | F631N  |      100 |
+  | F656N  |       60 |
+  | F547M  |       30 |
+  | F673N  |      100 |
+  | F658N  |      100 |
+  |        |          |
+- Back conversion to flux:
+  - F = 5.46e-16 R for F631N
+  - F = 5.88e-16 R for F656N
+
+
+** Checking the flux ratio between filters
+- For BG near 177-341W we have oi/ha = 1.81/58.77 = 0.0308 from HST
+- Meanwhile, from the EW with MUSE we have  6.2/1720 = 3.60e-3
+- This is very different, but that must be because of the continuum (39 \AA) and siii (16 \AA)
+  - So really should be (6.2 + 16 + 30.9) / (1720 + 21.5) = 0.03
+- Amazingly, this is the same!
+  - Although I was kind of expecting to have to factor in the exposure times for the PC images
+
+
+** Absolute fluxes and luminosities from PC images
+If we take it seriously, then we have the following
+|          |   R |       F | L/Lsun |
+|----------+-----+---------+--------|
+| 177-341W | 730 | 4.0e-13 | 2.1e-3 |
+|  182-413 | 338 | 1.8e-13 | 9.5e-4 |
+#+TBLFM: $3=5.46e-16 $2;s2::$4=$3 4 $pi 410**2 $pc**2 / $lsun ; s2
+
+** Comparing with Bally 1998
+
+** Issue of [S III] 6312 line
+- This has almost the same transmission as 6300 through the F631N filter
+- So its relative importance will depend on its EW
+- We can check this using the MUSE images
+
+
+** What we have learnt from the MUSE maps
+- The EW of 6300 is very low in the nebula when one is away from filaments, shocks, and proplyds
+  - Typically 3 to 10 \AA, which is much smaller than the filter width of 31 \AA
+  - This means that the BG is mainly continuum (and siii, see below)
+- The EW of 6312 is 15 to 20 \AA in the nebula around the proplyds, so this line makes a moderate contribution to the BG
+- EW of 6300 increases in those proplyds that do not harbor bright stars
+  - It reaches 50 \AA in 177-341, which means the line dominates the filter there
+  - Some of the increase is near the proplyd i-front, but the peak seems to be centered on the star
+  - I suppose we might need to worry about chromospheric emission at some point

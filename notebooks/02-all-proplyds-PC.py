@@ -501,6 +501,7 @@ find_atomic_factor(pp)
 weak_sources = [
     "156-308 NEW", "174-414", "183-427", "183-419", "182-413", 
     "175-355", "152-319", "154-321 NEW", "154-324", "179-354",
+    "182-316", "169-338", "170-360 NEW",
 ]
 bright_sources = ["167-317", "163-317", "158-323", "171-340", "176-325"]
 
@@ -541,7 +542,7 @@ class ProplydResults:
 
 # +
 ncols = 5
-nrows = nprops // ncols
+nrows = 1 + nprops // ncols
 
 fig, axes = plt.subplots(nrows, ncols, figsize=(4 * ncols, 2.5 * nrows))
 
@@ -774,13 +775,13 @@ results_table["F_cont"][invalid_cont] = np.nan
 results_table.show_in_notebook()
 # -
 
-fig, axes = plt.subplots(3, 1, sharex=True, figsize=(10, 9))
+fig, axes = plt.subplots(2, 1, sharex=True, figsize=(8, 12))
 axes[0].scatter(
     "Sep",
     "F_ha",
     data=results_table,
     s=30 * results_table["r_ha"] / 0.05,
-    c="r_ha",
+    c="r_oi",
     cmap="magma_r",
 )
 axes[1].scatter(
@@ -808,13 +809,6 @@ for row in results_table:
             s=100,
             alpha=0.4,
         )
-axes[2].scatter(
-    "Sep",
-    "F_cont",
-    data=results_table,
-    c="r_cont",
-    cmap="inferno",
-)
 for ax in axes:
     ax.set(
         xscale="log",
@@ -824,7 +818,6 @@ for ax in axes:
 axes[-1].set_xlabel("Separation from th1C, arcsec")
 axes[0].set_ylabel("Ha flux")
 axes[1].set_ylabel("[O I] 6300 flux")
-axes[2].set_ylabel("Continuum flux")
 ...;
 
 fig, ax = plt.subplots(figsize=(8, 8))
@@ -834,7 +827,7 @@ ax.scatter(
     data=results_table,
     s=30 * results_table["s/n"] * results_table["r_oi"] / 0.05,    
 )
-th = 0.5
+th = 0.8
 for row in results_table:
     if np.isfinite(row["F_oi"]):
         ax.plot(
@@ -852,7 +845,7 @@ for row in results_table:
             s=100,
             alpha=0.4,
         )
-    if row["s/n"] > 2.0:
+    if row["s/n"] > 0.5:
         ax.annotate(
             row["Name"],
             (row["F_ha"], row["F_oi"]),
@@ -862,7 +855,7 @@ for row in results_table:
             va="center",
             fontsize=12,
         )
-        th += 2.5
+        th += 2.2
 ax.set(
     xlabel="Ha flux",
     ylabel="[O I] 6300 flux",
@@ -882,8 +875,11 @@ ax.plot([0, 0.7], [0, 0.7])
 ax.set(
     xlabel="Ha mean radius, arcsec",
     ylabel="[O I] 6300 mean radius, arcsec",
-    xlim=[0, 0.7],
-    ylim=[0, 0.7],
+    xlim=[0.03, 0.7],
+    ylim=[0.03, 0.7],
+    xscale="log",
+    yscale="log",
 )
+...;
 
 
