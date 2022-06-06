@@ -630,9 +630,11 @@ fig.legend(
 sns.despine()
 fig.tight_layout()
 ...;
-
-
 # -
+
+fig.savefig("proplyd-pc-profiles.pdf")
+fig.savefig("proplyd-pc-profiles.jpg", dpi=300)
+
 
 # ## Calculate the final fluxes for each proplyd
 #
@@ -730,6 +732,19 @@ pres.nha, pres.noi, pres.noi_lo, pres.noi_hi, pres.ncont
 
 # OK, that seems to be working more or less as designed.
 
+# ## Absolute flux and luminosity calibration
+#
+# In the org file I derive these calibrations. Physical flux per DN of the images.
+
+F0_oi = 3.822e-17 * u.erg / u.s / u.cm**2
+F0_ha = 6.86e-17 * u.erg / u.s / u.cm**2
+
+D = 410 * u.pc
+A = 4 * np.pi * D**2
+L0_oi = (F0_oi * A).to(u.solLum)
+L0_ha = (F0_ha * A).to(u.solLum)
+L0_ha
+
 # ## Table of final results
 
 results = []
@@ -743,10 +758,10 @@ for row in source_table:
         {
             "Name": pres.pp.name.split()[0],
             "Sep": row["Sep"],
-            "F_ha": pres.flux_ha,
-            "F_oi": pres.flux_oi,
-            "F_oi_lo": pres.flux_oi_lo,
-            "F_oi_hi": pres.flux_oi_hi,
+            "L_ha": pres.flux_ha * L0_ha,
+            "L_oi": pres.flux_oi * L0_oi,
+            "L_oi_lo": pres.flux_oi_lo * L0_oi,
+            "L_oi_hi": pres.flux_oi_hi * L0_oi,
             "F_cont": pres.flux_cont,
             "r_ha": pres.r_ha * u.arcsec,
             "r_oi": pres.r_oi * u.arcsec,
@@ -758,16 +773,16 @@ results_table = QTable(results)
 results_table.add_index("Name")
 for col in results_table.itercols():
     if col.info.unit == "arcsec":
-        col.info.format = ".2f"
-    if col.info.name.startswith("F_"):
-        col.info.format = ".3g"
+        col.info.format = ".3f"
+    if col.info.name[:2] in ["F_", "L_"]:
+        col.info.format = ".3e"
     if col.info.name in ["s/n"]:
         col.info.format = ".2f"
 
 results_table.info
 
-upper_limits = results_table["F_oi_lo"] <= 0.0
-results_table["F_oi"][upper_limits] = np.nan
+upper_limits = results_table["L_oi_lo"] <= 0.0
+results_table["L_oi"][upper_limits] = np.nan
 invalid_cont = results_table["F_cont"] <= 0.0
 results_table["F_cont"][invalid_cont] = np.nan
 
@@ -775,35 +790,37 @@ results_table["F_cont"][invalid_cont] = np.nan
 results_table.show_in_notebook()
 # -
 
-fig, axes = plt.subplots(2, 1, sharex=True, figsize=(8, 12))
+fig, axes = plt.subplots(2, 1, sharex=True, figsize=(8, 8))
 axes[0].scatter(
     "Sep",
-    "F_ha",
+    "L_ha",
     data=results_table,
     s=30 * results_table["r_ha"] / 0.05,
     c="r_oi",
     cmap="magma_r",
+    edgecolor="k",
 )
 axes[1].scatter(
     "Sep",
-    "F_oi",
+    "L_oi",
     data=results_table,
     s=30 * results_table["s/n"] * results_table["r_oi"] / 0.05,
     c="r_oi",
     cmap="magma_r",
+    edgecolor="k",
 )
 for row in results_table:
-    if np.isfinite(row["F_oi"]):
+    if np.isfinite(row["L_oi"]):
         axes[1].plot(
             [row["Sep"].value, row["Sep"].value],
-            [row["F_oi_lo"], row["F_oi_hi"]],
+            [row["L_oi_lo"].value, row["L_oi_hi"].value],
             color="r",
             alpha=0.4,
         )
     else:
         axes[1].scatter(
             row["Sep"].value,
-            row["F_oi_hi"],
+            row["L_oi_hi"].value,
             marker="$\downarrow$",
             color="r",
             s=100,
@@ -815,31 +832,36 @@ for ax in axes:
         yscale="log",
         xlim=[4.0, 100.0],
     )
-axes[-1].set_xlabel("Separation from th1C, arcsec")
-axes[0].set_ylabel("Ha flux")
-axes[1].set_ylabel("[O I] 6300 flux")
+axes[-1].set_xlabel("Separation from θ¹ Ori C, arcsec")
+axes[0].set_ylabel("Hα luminosity, L$_⊙$")
+axes[1].set_ylabel("[O I] λ6300 luminosity, L$_⊙$")
+sns.despine()
+fig.tight_layout()
 ...;
+
+fig.savefig("proplyd-pc-L-sep.pdf")
+fig.savefig("proplyd-pc-L-sep.jpg", dpi=300)
 
 fig, ax = plt.subplots(figsize=(8, 8))
 ax.scatter(
-    "F_ha",
-    "F_oi",
+    "L_ha",
+    "L_oi",
     data=results_table,
     s=30 * results_table["s/n"] * results_table["r_oi"] / 0.05,    
 )
 th = 0.8
 for row in results_table:
-    if np.isfinite(row["F_oi"]):
+    if np.isfinite(row["L_oi"]):
         ax.plot(
-            [row["F_ha"], row["F_ha"]],
-            [row["F_oi_lo"], row["F_oi_hi"]],
+            [row["L_ha"].value, row["L_ha"].value],
+            [row["L_oi_lo"].value, row["L_oi_hi"].value],
             color="r",
             alpha=0.4,
         )
     else:
         ax.scatter(
-            row["F_ha"],
-            row["F_oi_hi"],
+            row["L_ha"].value,
+            row["L_oi_hi"].value,
             marker="$\downarrow$",
             color="r",
             s=100,
@@ -848,7 +870,7 @@ for row in results_table:
     if row["s/n"] > 0.5:
         ax.annotate(
             row["Name"],
-            (row["F_ha"], row["F_oi"]),
+            (row["L_ha"].value, row["L_oi"].value),
             xytext=(20 * np.cos(th), 20 * np.sin(th)), 
             textcoords='offset points',
             ha="center",
@@ -857,12 +879,16 @@ for row in results_table:
         )
         th += 2.2
 ax.set(
-    xlabel="Ha flux",
-    ylabel="[O I] 6300 flux",
+    xlabel="Hα luminosity, L$_⊙$",
+    ylabel="[O I] λ6300 luminosity, L$_⊙$",
     xscale="log",
     yscale="log",
 )
+sns.despine()
 ...;
+
+fig.savefig("proplyd-pc-L-L.pdf")
+fig.savefig("proplyd-pc-L-L.jpg", dpi=300)
 
 fig, ax = plt.subplots(figsize=(8, 8))
 ax.scatter(
@@ -871,15 +897,22 @@ ax.scatter(
     data=results_table,
     s=30 * results_table["s/n"] * results_table["r_oi"] / 0.05,    
 )
-ax.plot([0, 0.7], [0, 0.7])
+ax.plot([0, 1], [0, 1])
+ax.plot([0, 1], [0, 0.5])
 ax.set(
-    xlabel="Ha mean radius, arcsec",
-    ylabel="[O I] 6300 mean radius, arcsec",
-    xlim=[0.03, 0.7],
-    ylim=[0.03, 0.7],
+    xlabel="Hα mean radius, arcsec",
+    ylabel="[O I] λ6300 mean radius, arcsec",
+    xlim=[0.01, 1.0],
+    ylim=[0.01, 1.0],
     xscale="log",
     yscale="log",
 )
+sns.despine()
 ...;
+
+fig.savefig("proplyd-pc-r-r.pdf")
+fig.savefig("proplyd-pc-r-r.jpg", dpi=300)
+
+u.solLum.to(u.erg/u.s)
 
 

@@ -190,7 +190,7 @@ CLOSED: [2022-06-04 Sat 13:20]
   
 
 
-** Absolute flux calibration
+** TODO Absolute flux calibration
 - I see three possible approaches
   1. Use the photometric keywords in header to get mean flux per angstrom, then multiply by effective width of filter to get the line flux
   2. Use the results from O'Dell & Doi (2004)
@@ -203,7 +203,7 @@ CLOSED: [2022-06-04 Sat 13:20]
     - Although, we do need to know the effective width of the filter too
 
 
-** Properties of the WFPC2 filters
+*** Properties of the WFPC2 filters
 - From the Instrument Handbook I get the following
   | Filter | mean wav | width | peak trans | peak wav |  Q Tmax |
   |--------+----------+-------+------------+----------+---------|
@@ -220,7 +220,7 @@ CLOSED: [2022-06-04 Sat 13:20]
   - They give a worked example for the Ha line:
     - F = 1e-16 erg/cm2/s
     - R = 2.3e12 0.11273 1e-16 6563 = 0.17 elec/s
-  - I am not quite sure why the gain does not factor in here. Presumably it is included in the Q factor
+  - I am not quite sure why the gain does not factor in here. Presumably it is included in the Q factor?
 - Exposure times according to the headers
   | Filter | Exp time |
   |--------+----------|
@@ -235,32 +235,75 @@ CLOSED: [2022-06-04 Sat 13:20]
   - F = 5.88e-16 R for F656N
 
 
-** Checking the flux ratio between filters
+*** Checking the flux ratio between filters
 - For BG near 177-341W we have oi/ha = 1.81/58.77 = 0.0308 from HST
 - Meanwhile, from the EW with MUSE we have  6.2/1720 = 3.60e-3
 - This is very different, but that must be because of the continuum (39 \AA) and siii (16 \AA)
   - So really should be (6.2 + 16 + 30.9) / (1720 + 21.5) = 0.03
 - Amazingly, this is the same!
-  - Although I was kind of expecting to have to factor in the exposure times for the PC images
+  - However, I was kind of expecting to have to factor in the exposure times for the PC images
+  - Although the difference in exposure time is only 60 versus 100
 
 
-** Absolute fluxes and luminosities from PC images
-If we take it seriously, then we have the following
-|          |   R |       F | L/Lsun |
-|----------+-----+---------+--------|
-| 177-341W | 730 | 4.0e-13 | 2.1e-3 |
-|  182-413 | 338 | 1.8e-13 | 9.5e-4 |
-#+TBLFM: $3=5.46e-16 $2;s2::$4=$3 4 $pi 410**2 $pc**2 / $lsun ; s2
+*** Absolute fluxes and luminosities from PC images
+- We use the equation that we derive below where we verify by comparison with the Bally intensities
+  - F = 3.822e-17 DN for F631N
+  - F = 6.86e-17 DN for F656N
+- then we have the following
+  |          |   R |       F | L/Lsun |
+  |----------+-----+---------+--------|
+  | 177-341W | 730 | 2.8e-14 | 1.5e-4 |
+  |  182-413 | 338 | 1.3e-14 | 6.8e-5 |
+  #+TBLFM: $3=3.822e-17 $2;s2::$4=$3 4 $pi 410**2 $pc**2 / $lsun ; s2
+- Our total luminosity is three times higher than Bally's for 182-413, but this is because we are including the diffuse interior emission, as well as that near the surface of the disk
 
-** Comparing with Bally 1998
+*** Comparing with Bally 1998
+- Table 3 lists all the sources and notes which ones show oi emission from the disk, in their opinion
+  - 161-328, 158-327 (LV6), 170-337, 160-328, 142-301, 184-427
+  - 142-301 is not on the PC images, so we miss it
+- Table 4 gives an [O I] intensity for both the disk and the i-front
+  - There are 13 sources with oi disk intensities, as opposed to only 6 listed in Table 3
+  - Some sample values from their table
+    |    |    Name | I_d' |      I_d |   a_d |   b_d | A_pix |       F |      L |
+    |----+---------+-----+---------+------+------+------+---------+--------|
+    | 26 | 177-341 | 4.4 | 2.1e-13 | 0.18 | 0.09 | 24.6 | 1.1e-14 | 5.8e-5 |
+    | 40 | 182-413 | 1.7 | 8.2e-14 | 0.18 | 0.09 | 24.6 | 4.2e-15 | 2.2e-5 |
+    #+TBLFM: $4=$3 1e-16 / 0.0455**2 ; s2::$7=$pi $5 $6 / 0.0455**2 ;f1::$8=$3 $7 1e-16 ; s2::$9=4 $pi (410 $pc)**2 $8 / $lsun; s2
+  - I_d' is directly from their table, and is in units of 1e-16 erg/s/cm2/PC pixel of size 0.0455 arcsec
+  - I_d is converted to erg/s/cm2/sq.arcsec
+  - a_d and b_d are the major minor semi-axes of disk in arcsec
+  - A_pix is area of disk (\pi a b) in pixels
+  - F is the total flux in erg/s/cm2
+  - L is luminosity in Lsun
+    - *Note that this gives a luminosity for 182-413 that is significantly smaller than what Giulia and Tom have in the paper, which seems to be about 3e-4*
+    - Maybe there could be some additional correction for extinction in the neutral flow, but that is only going to be a factor of 3 or so
+    - Although there is also the foreground extinction to the nebula to account for, so maybe the two extinctions could combine to give an order of magnitude increase. 
+- There is a perfect description of the three different sources of oi emission in the context of 182-413:
+  : The large teardrop-shaped object 182-413 (HST 10) has several extended [O I] emission components. The central region is seen as a prominent elongated silhouette in ionized species ([S II], [N II], and [O III]) and in Ha. However, this region is bright in the [O I] image. The teardrop-shaped outer boundary that is bright in Ha and in the ions is also bright in [O I]. Finally, there is diffuse [O I] emission in the entire projected interior of 182-413 that is several times fainter than the emission produced by the silhouette or the outer boundary.
+  - Note that although it is true that the diffuse interior emission is fainter (lower surface brightness) than the i-front or the silhouette disk, it also extends over a greater area, so it is not insignificant in its contribution to the total flux
 
-** Issue of [S III] 6312 line
+
+**** Comparing intensities with the Bally values
++ For 182-413 the peak BG-subtracted disk signal is about 5.75 in the F631N filter.
+  + Hi-pass filtered max value of 2.5 times BG value of 2.3
++ Using this value as R in the equation 5.46e-16 R would give F = 31.39e-16, which would mean I_d' = 31.39, much higher than Bally find.
++ So, we must be missing something. Probably the gain and the exposure time.
+  + Suppose that R = G DN / t
+  + Where our measured values are DN
+  + t = 100 s for oi, or 60 s for H alpha
+  + G = 7 is the gain in elec/DN
++ So now we have the following equations:
+  + F631N (100 s): F = (5.46e-16 7 / 100) DN = 3.822e-17 DN
+  + F656N (60 s): F = (5.88e-16 7 / 60) DN = 6.86e-17 DN
++ So we would predict disk flux per pixel of 0.3822 5.75 = 2.2
+  + Bally have 1.7, which is close enough, especially since a more representative value would be DN = 4.6 instead of 5.75, which would give 1.76
+*** Issue of [S III] 6312 line
 - This has almost the same transmission as 6300 through the F631N filter
 - So its relative importance will depend on its EW
 - We can check this using the MUSE images
 
 
-** What we have learnt from the MUSE maps
+*** What we have learnt from the MUSE maps
 - The EW of 6300 is very low in the nebula when one is away from filaments, shocks, and proplyds
   - Typically 3 to 10 \AA, which is much smaller than the filter width of 31 \AA
   - This means that the BG is mainly continuum (and siii, see below)
