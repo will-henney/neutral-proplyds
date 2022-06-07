@@ -462,20 +462,23 @@ ax.fill_between(
     linewidth=0,
 )
 ax.plot(pp.mean["r"], pp.mean["f656n"] - 1, label="ha")
-ax.plot(pp.mean["r"], cont - 1, label="starlight")
-ax.plot(pp.mean["r"], pp.mean["f631n"] - 1, label="oi + cont")
+ax.plot(pp.mean["r"], cont - 1, label="starlight", color="r")
+ax.plot(pp.mean["r"], pp.mean["f631n"] - 1, 
+        color=line.get_color(), label="total F631N")
 
 ax.axhline(0.0, linestyle="dashed", color="k")
 ax.legend()
 ax.set_title(pp.name)
 ax.set(
     xlabel="Radius, arcsec",
-    ylabel="Brightness",
+    ylabel="Brightness / BG",
 )
 ...;
-
-
 # -
+
+fig.savefig("proplyd-pc-example.pdf")
+fig.savefig("proplyd-pc-example.jpg", dpi=300)
+
 
 # ### Extracting the profile of stellar continuum
 #
@@ -790,6 +793,9 @@ results_table["F_cont"][invalid_cont] = np.nan
 results_table.show_in_notebook()
 # -
 
+results_table.write("proplyd-pc-luminosities.ecsv", overwrite=True)
+
+# + tags=[]
 fig, axes = plt.subplots(2, 1, sharex=True, figsize=(8, 8))
 axes[0].scatter(
     "Sep",
@@ -838,11 +844,21 @@ axes[1].set_ylabel("[O I] λ6300 luminosity, L$_⊙$")
 sns.despine()
 fig.tight_layout()
 ...;
+# -
 
+# The color is proportional to the mean oi radius (darker is larger) and is the same in both panels.  The symbol sizes in the upper panel are proportional to the mean ha raius, while in the lower panel are proportional to the s/n of the oi flux measurement. Downward-pointing red arrows are upper limits on the oi from the neutral disk. This mainly applies to the innermost proplyds that  are very small and very bright in ha, where all the oi emission is consistent with coming from the i-front. 
+
+# + tags=[]
 fig.savefig("proplyd-pc-L-sep.pdf")
 fig.savefig("proplyd-pc-L-sep.jpg", dpi=300)
 
+# +
 fig, ax = plt.subplots(figsize=(8, 8))
+
+# Show approximate linear relationship
+Lhagrid = np.logspace(-4.1, -1.5)
+ax.plot(Lhagrid, 0.01 * Lhagrid, color="k", alpha=0.3, linestyle="dashed")
+
 ax.scatter(
     "L_ha",
     "L_oi",
@@ -886,6 +902,9 @@ ax.set(
 )
 sns.despine()
 ...;
+# -
+
+# The gray dashed line shows the relationship `oi = 0.01 ha`, which is a reasonable approximation to the trend. The size of the symbols is a rough indication of the s/n of the oi measurements.  Note that if we restricted ourselves to the sources with the best s/n then we would be biasing the results upwards, since we can make better measurements when oi and oi/ha are larger. 
 
 fig.savefig("proplyd-pc-L-L.pdf")
 fig.savefig("proplyd-pc-L-L.jpg", dpi=300)
@@ -910,9 +929,7 @@ ax.set(
 sns.despine()
 ...;
 
+# The blue line is r(oi) = r(ha), while the orange line here is for r(oi) = 0.5 r(ha), which represents the data better.  This is consistent with the finding that the disk radius is typically half of the ionization front radius, and it shows that we have been successful in removing the i-front contribution to the oi emission. Again, the symbol size is proportional to the s/n. 
+
 fig.savefig("proplyd-pc-r-r.pdf")
 fig.savefig("proplyd-pc-r-r.jpg", dpi=300)
-
-u.solLum.to(u.erg/u.s)
-
-
