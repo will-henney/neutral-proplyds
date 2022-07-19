@@ -473,6 +473,8 @@ ax.set(
     xlabel="Radius, arcsec",
     ylabel="Brightness / BG",
 )
+sns.despine()
+fig.tight_layout()
 ...;
 # -
 
@@ -901,6 +903,7 @@ ax.set(
     yscale="log",
 )
 sns.despine()
+fig.tight_layout()
 ...;
 # -
 
@@ -927,9 +930,12 @@ ax.set(
     yscale="log",
 )
 sns.despine()
+fig.tight_layout()
 ...;
 
 # The blue line is r(oi) = r(ha), while the orange line here is for r(oi) = 0.5 r(ha), which represents the data better.  This is consistent with the finding that the disk radius is typically half of the ionization front radius, and it shows that we have been successful in removing the i-front contribution to the oi emission. Again, the symbol size is proportional to the s/n. 
 
 fig.savefig("proplyd-pc-r-r.pdf")
 fig.savefig("proplyd-pc-r-r.jpg", dpi=300)
+
+  
