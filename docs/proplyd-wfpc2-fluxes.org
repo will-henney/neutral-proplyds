@@ -1,5 +1,36 @@
 * Measuring [O I] 6300 flux from HST images of proplyds
 
+
+** Talk with Tom and Giulia via Zoom [2022-07-19 Tue]
+
+*** Things that Tom wants to discuss
+: In case Im not able to come, things to discuss 
+
+: - Giulia can maybe show some of the plots and how it all looks with the inclusion of the data you sent. Maybe give general state of paper. I think we are basically wanting to just finish this off now. Giulia starts a new postdoc across town with James Owen soon so looking to wrap it up if possible. The main outcome is this prediction of high L_OI and high L_OI/L_acc which could maybe be applied to ID external photoevaporation in distant systems. We want to just demonstrate it’s “correct’ using local proplyds and broadly it does look like the proplyds have higher L_OI than the Nisini + 2018 values
+
+Fine
+
+: - the main thing we want is to understand fully the way the observational [OI] data has been split into different components (disc/PDR/outflow). E.g. how it differs from the Störzer & Hollenbach value for 182-413. Our models predict a rise in the [OI] at high G0 but it seems a little higher than the observations. We are including all the emission from OH dissociation from some fixed inner boundary “R_disc" outwards into the wind.  Possible explanations for a difference include
+
+: i) it may be at very high G0 we do just need to do the full EUV+FUV and you get a bit of a turnover in L_OI(G0) that we miss
+
+: ii) The observed proplyds at high G0 could be much less massive/more truncated than our models
+
+
+This is certainly true
+
+: iii) I believe there is sometimes some pretty significant emission from near that disc boundary in the model, so maybe our model is also including some of the emission attributed to “disc”. Though of course we do not include “internal” OI originating due to accretion/photoevaporation in the inner disc.
+
+I think this is OK, since observations also include this
+
+
+
+*** TODO Things to do
+- work out max oi luminosities including the i-front
+- check luminosities of Bally 182 41
+- looking at the auroral  o i line
+- accretion ha luminosity from star
+  
 ** Initial description for Tom and Giulia
 Craft document
 + [[shell:open 'craftdocs://open?blockId=b988d13e-945f-dbb2-d3b2-481510def473&spaceId=ebf58611-71d2-f72d-500b-350bfc7b0451'][Link to open in app]]
