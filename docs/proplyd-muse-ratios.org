@@ -174,6 +174,60 @@ CLOSED: [2022-04-10 Sun 00:33]
   - and then compare with PyNeb
 
 
+*** Calculate T from 5577/6300 ratio using pyneb
+
+- Assume density of 1e4, although low density limit is only 2% different
+- Look at line ratios between 0.01 and 0.025
+#+begin_src python :results output verbatim
+  import numpy as np
+  import pyneb as pn
+
+  oi = pn.Atom("o", 1)
+  print(
+      oi.getTemDen(
+          [0.01, 0.015, 0.02, 0.025],
+          den=10000.,
+          wave1=5577,
+          wave2=6300,
+      )
+  )
+
+
+#+end_src
+
+#+RESULTS:
+: [ 7749.10315973  8739.28995845  9616.82836919 10522.85809857]
+- This shows that the temperature near the brightness peak is about 8700 K
+  - although still need to correct for reddening,  which would put the T up a bit
+  - The reddening from the Balmer decrement should bean lower limit to the reddening to the ionization front
+*** Collisional excitation/deexcitation of 6300 by neutral H atoms
+- see Krems:2006d
+- De-excitation rate is 1e-12 cm^3/s
+- A-value is 6.478e-03 /s
+- n crit = A / q = 6.478e-03 / 1e-12 = 6.5e9 /cm^3
+*** Non-collisional excitation of the 5577 line
+- Table of energy levels for O I from NIST
+  - https://physics.nist.gov/PhysRefData/Handbook/Tables/oxygentable5.htm
+- Forbidden lines are between levels of the ground configuration: 2s2.2p4
+  - ^3P ground
+    - ^3P_2 (E = 0)
+    - ^3P_1 (158.265 cm^-1)
+    - ^3P_0 (226.977 cm^-1)
+    - Transitions between sub-levels give 63 micron ( ^3P_1 \to ^3P_2) and 157 micron ( ^3P_0 \to ^3P_1) far-infrared lines
+  - ^1D first excited (15867.862 cm^-1)
+    - ^1D_2 -> ^3P_1 is 6363 \AA
+    - ^1D_2 -> ^3P_2 is 6300 \AA
+  - ^1S second excited (33792.583 cm^-1)
+    - ^1S_0 \to ^1D_2 is 5577 \AA
+    - ^1S_0 \to ^3P_2 is 2959 \AA (vac)
+- In my Orion Raman notes, I mentioned possible radiative pumping of the forbidden lines
+  - The route is via weak intercombination transitions from the 3d ^3D term to 2s2.2p4 ^1D and ^1S 
+  - Branching ratio of each is only 1e-05 compared with branching ratio of 0.275 to 3p ^3P, which is upper level of 8447 \AA line
+  - This means that this mechanism *cannot be important*
+- Possible dissociation pumping of 5577
+  - van Dishoek 1983JChPh..79..873V seems the best reference
+  - 
+
 ** Other lines
 - oi 6300, 
 - oi 8446
