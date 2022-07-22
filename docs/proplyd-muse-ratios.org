@@ -191,15 +191,24 @@ CLOSED: [2022-04-10 Sun 00:33]
           wave2=6300,
       )
   )
+  print(
+      oi.getCritDensity([300, 1000, 3000, 1e4], 4) / 1e6
+  )
+  print(
+      oi.getCritDensity([300, 1000, 3000, 1e4], 5) / 1e6
+  )
 
 
 #+end_src
 
 #+RESULTS:
 : [ 7749.10315973  8739.28995845  9616.82836919 10522.85809857]
+: [0.64448614 1.17666532 2.03780737 1.53064331]
+: [27.97285258 51.07120786 88.45792681 95.391892  ]
 - This shows that the temperature near the brightness peak is about 8700 K
   - although still need to correct for reddening,  which would put the T up a bit
   - The reddening from the Balmer decrement should bean lower limit to the reddening to the ionization front
+- I also print the critical electron density for the 6300 and 5577 lines, in units of 1e6 pcc
 *** Collisional excitation/deexcitation of 6300 by neutral H atoms
 - see Krems:2006d
 - De-excitation rate is 1e-12 cm^3/s
@@ -220,13 +229,28 @@ CLOSED: [2022-04-10 Sun 00:33]
   - ^1S second excited (33792.583 cm^-1)
     - ^1S_0 \to ^1D_2 is 5577 \AA
     - ^1S_0 \to ^3P_2 is 2959 \AA (vac)
-- In my Orion Raman notes, I mentioned possible radiative pumping of the forbidden lines
-  - The route is via weak intercombination transitions from the 3d ^3D term to 2s2.2p4 ^1D and ^1S 
+- In my Orion Raman notes, I mentioned possible fluorescent radiative pumping of the forbidden lines
+  - The route is via weak inter-combination transitions from the 3d ^3D term to 2s2.2p4 ^1D and ^1S 
   - Branching ratio of each is only 1e-05 compared with branching ratio of 0.275 to 3p ^3P, which is upper level of 8447 \AA line
   - This means that this mechanism *cannot be important*
+    - We would get F(\lambda{}6300)/F(\lambda{}8447) < 1e-4 from this mechanism
 - Possible dissociation pumping of 5577
   - van Dishoek 1983JChPh..79..873V seems the best reference
-  - 
+  - Summary of results for dissociation rates in optically thin cloud exposed to the interstellar radiation field
+    : The photodissociation rate is 4.6 x 10^-10 /s if the maximum contribution of the bound states is used and 3.6 x 10^-10 /s if the estimated dissociation efficiencies are adopted. About 45%  of the dissociations lead to O(3P) + H, about 50% to O(1D) + H and about 5% to O(1S) + H.
+  - This implies that the flux ratio of F(\lambda{}5577)/F(\lambda{}6300) = (5 / 50) (6300 / 5577) = 0.113 for the dissociation pumped component.
+    - This is 8 times higher than the ratio we get from collisional excitation
+    - But it would be reduced slightly by the extra reddening down to the disk surface
+    - However, it might be increased if the dissociation channel via  2(B) ^2\Sigma^+ were enhanced, which would be the case for a FUV spectrum that was not so soft as the ISRF *see below*
+  - For the total dissociation rate, the UMIST network uses 3.5e-10, which is very similar to van Dishoek's value.
+  - Further details
+    - The ^1S O^0 state comes from dissociation via the 2(B) ^2\Sigma^+ molecular OH state
+      - Peak x-section at 11 eV
+    - The ^1D O^0 state comes from dissociation via the following OH states:
+      - 1(A) ^2\Sigma^+ (probably unimportant unless spectrum is very soft)
+      - 1 ^2\Delta: peak x-section at 9 eV
+      - 2 ^2\Pi: sharp peak at 10 ev
+    - In the presence of strong Ly alpha, the 1 ^2\Delta and 2(B) ^2\Sigma^+ channels will be favored since they have significant cross section at 10 ev
 
 ** Other lines
 - oi 6300, 
