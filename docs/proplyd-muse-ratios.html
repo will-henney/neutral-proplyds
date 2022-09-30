@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2022-09-10 Sat 14:04 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Non-collisional excitation of the 5577 line</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="William Henney" />
+<style type="text/css">
+<!--/*--><![CDATA[/*><!--*/
+/* 18 Jan 2016: Modified from the stylesheet by Zhitao Gong on
+https://github.com/gongzhitaao/orgcss/
+ */
+
+body {
+    max-width: 100%;
+    margin: 1% 1%;
+    font: normal normal normal 16px/1.6em 'Open Sans', sans-serif;
+    color: #333;
+}
+
+@media all and (min-width: 95ex) {
+    body {
+        max-width: 95ex;
+        margin: 1% auto;
+    }
+
+    .creator {
+        float: right;
+    }
+}
+
+@media not all and (min-width: 110ex) {
+
+    .creator {
+        float: left;
+    }
+
+    p img {
+        width: 95%;
+    }
+}
+
+.title {
+    padding: .5em 0;
+    text-align: center;
+    color: black;
+}
+
+.subtitle {
+    font-size: medium;
+    font-weight: bold;
+    margin-top: 0;
+    text-align: center;
+}
+
+.abstract {
+    width: 80%;
+    margin: auto;
+    font-style: italic;
+}
+
+.abstract p:last-of-type:before {
+    content: "    ";
+    white-space: pre;
+}
+
+.status {
+    font-size: 90%;
+    margin: 2em auto;
+}
+
+[class^="section-number-"] {
+    margin-right: .5em;
+}
+
+#footnotes {
+    font-size: 90%;
+}
+
+.footpara {
+    display: inline;
+    margin: .2em auto;
+}
+
+.footdef {
+    margin-bottom: 1em;
+}
+
+.footdef sup {
+    padding-right: .5em;
+}
+
+a {
+    color: #527d9a;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #003355;
+    border-bottom: 1px dotted;
+}
+
+p img {
+    vertical-align: middle;
+}
+
+h1,h2,h3,h4,h5,h6 {
+    color: #A5573E;
+    line-height: 1.6em;
+    font-family: 'Droid Serif', serif;
+}
+
+h4,h5,h6 {
+    font-size: 1em;
+}
+
+table {
+    border-top: 2px solid;
+    border-bottom: 2px solid;
+    margin: auto;
+    border-collapse: collapse;
+}
+
+thead {
+    border-bottom: 2px solid;
+}
+
+table td + td, table th + th {
+    border-left: 1px solid gray;
+}
+
+table tr {
+    border-top: 1px solid lightgray;
+}
+
+td,th {
+    padding: 5px 10px;
+    vertical-align: middle;
+}
+
+code {
+    padding: 2px 5px;
+    margin: auto 1px;
+    border: 1px solid #DDD;
+    border-radius: 3px;
+    background-clip: padding-box;
+    color: #333;
+    font-size: 90%;
+}
+
+blockquote {
+    margin: 1em 2em;
+    padding-left: 1em;
+    border-left: 3px solid #ccc;
+}
+
+kbd {
+    background-color: #f7f7f7;
+    font-size: 14px;
+    margin: 0 .1em;
+    padding: .1em .6em;
+}
+
+.figure {
+    padding: 1em;
+}
+
+.figure p {
+    text-align: center;
+}
+
+.todo {
+    color: red;
+    font-family: monospace;
+}
+
+.done {
+    color: green;
+    font-family: monospace;
+}
+
+.priority {
+    color: orange;
+    font-family: monospace;
+}
+
+.tag {
+    background-color: #eee;
+    font-family: monospace;
+    font-size: 80%;
+    font-weight: normal;
+    padding: 2px;
+}
+
+.timestamp {
+    color: #bebebe;
+}
+
+.timestamp-kwd {
+    color: #5f9ea0;
+}
+
+.org-right {
+    margin-left: auto;
+    margin-right: 0px;
+    text-align: right;
+}
+
+.org-left {
+    margin-left: 0px;
+    margin-right: auto;
+    text-align: left;
+}
+
+.org-center {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.underline {
+    text-decoration: underline;
+}
+
+#postamble p, #preamble p {
+    font-size: 90%;
+    margin: .2em;
+}
+
+p.verse {
+    margin-left: 3%;
+}
+
+pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    font-family: monospace;
+    margin: 1.2em;
+    padding: 8pt;
+}
+
+pre.src {
+    overflow: auto;
+    padding-top: 1.2em;
+    position: relative;
+    font-size: 90%;
+    color: #dcdccc;
+    background-color: #3f3f3f; 
+}
+
+pre.src:before {
+    background-color: gray;
+    border: 1px solid black;
+    display: none;
+    padding: 3px;
+    position: absolute;
+    right: 10px;
+    /* top: -10px; */
+}
+
+pre.src:hover:before {
+    display: inline;
+}
+
+pre.src-sh:before {
+    content: 'sh';
+}
+pre.src-bash:before {
+    content: 'bash';
+}
+pre.src-emacs-lisp:before {
+    content: 'Emacs Lisp';
+}
+pre.src-R:before {
+    content: 'R';
+}
+pre.src-python:before {
+    content: 'Python';
+}
+pre.src-org:before {
+    content: 'Org';
+}
+pre.src-c++:before {
+    content: 'C++';
+}
+pre.src-c:before {
+    content: 'C';
+}
+pre.src-html:before {
+    content: 'HTML'
+}
+
+caption.t-above {
+    caption-side: top;
+}
+
+caption.t-bottom {
+    caption-side: bottom;
+}
+
+th.org-right {
+    text-align: center;
+}
+
+th.org-left {
+    text-align: center;
+}
+
+th.org-center {
+    text-align: center;
+}
+
+td.org-right {
+    text-align: right;
+}
+
+td.org-left {
+    text-align: left;
+}
+
+td.org-center {
+    text-align: center;
+}
+
+dt {
+    font-weight: bold;
+}
+
+.inlinetask {
+    background: #ffffcc;
+    border: 2px solid gray;
+    margin: 10px;
+    padding: 10px;
+}
+
+#org-div-home-and-up {
+    font-size: 70%;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.linenr {
+    font-size: smaller;
+}
+
+.code-highlighted {
+    background-color: #ffff00;
+}
+
+#bibliography {
+    font-size: 90%;
+}
+
+#bibliography table {
+    width: 100%;
+}
+
+/* .org-info-js_info-navigation { */
+/*     border-style: none; */
+/* } */
+/* #org-info-js_console-label { */
+/*     font-size: 10px; */
+/*     font-weight: bold; */
+/*     white-space: nowrap; */
+/* } */
+/* .org-info-js_search-highlight { */
+/*     background-color: #ffff00; */
+/*     color: #000000; */
+/*     font-weight: bold; */
+/* } */
+/*]]>*/-->
+</style>
+<script type="text/javascript">
+// @license magnet:?xt=urn:btih:e95b018ef3580986a04669f1b5879592219e2a7a&dn=public-domain.txt Public Domain
+<!--/*--><![CDATA[/*><!--*/
+     function CodeHighlightOn(elem, id)
+     {
+       var target = document.getElementById(id);
+       if(null != target) {
+         elem.classList.add("code-highlighted");
+         target.classList.add("code-highlighted");
+       }
+     }
+     function CodeHighlightOff(elem, id)
+     {
+       var target = document.getElementById(id);
+       if(null != target) {
+         elem.classList.remove("code-highlighted");
+         target.classList.remove("code-highlighted");
+       }
+     }
+    /*]]>*///-->
+// @license-end
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Non-collisional excitation of the 5577 line</h1>
+<ul class="org-ul">
+<li>Table of energy levels for O I from NIST
+<ul class="org-ul">
+<li><a href="https://physics.nist.gov/PhysRefData/Handbook/Tables/oxygentable5.htm">https://physics.nist.gov/PhysRefData/Handbook/Tables/oxygentable5.htm</a></li>
+</ul></li>
+<li>Forbidden lines are between levels of the ground configuration: 2s2.2p4
+<ul class="org-ul">
+<li>.<sup>3</sup>P ground
+<ul class="org-ul">
+<li>.<sup>3</sup>P<sub>2</sub> (E = 0)</li>
+<li>.<sup>3</sup>P<sub>1</sub> (158.265 cm<sup>-1</sup>)</li>
+<li>.<sup>3</sup>P<sub>0</sub> (226.977 cm<sup>-1</sup>)</li>
+<li>Transitions between sub-levels give 63 micron (.<sup>3</sup>P<sub>1</sub> &rarr; .<sup>3</sup>P<sub>2</sub>) and 157 micron (.<sup>3</sup>P<sub>0</sub> &rarr; .<sup>3</sup>P<sub>1</sub>) far-infrared lines</li>
+</ul></li>
+<li>.<sup>1</sup>D first excited (15867.862 cm<sup>-1</sup>)
+<ul class="org-ul">
+<li>.<sup>1</sup>D<sub>2</sub> -&gt; .<sup>3</sup>P<sub>1</sub> is 6363 &Aring;</li>
+<li>.<sup>1</sup>D<sub>2</sub> -&gt; .<sup>3</sup>P<sub>2</sub> is 6300 &Aring;</li>
+</ul></li>
+<li>.<sup>1</sup>S second excited (33792.583 cm<sup>-1</sup>)
+<ul class="org-ul">
+<li>.<sup>1</sup>S<sub>0</sub> &rarr; .<sup>1</sup>D<sub>2</sub> is 5577 &Aring;</li>
+<li>.<sup>1</sup>S<sub>0</sub> &rarr; .<sup>3</sup>P<sub>2</sub> is 2959 &Aring; (vac)</li>
+</ul></li>
+</ul></li>
+<li>In my Orion Raman notes, I mentioned possible fluorescent radiative pumping of the forbidden lines
+<ul class="org-ul">
+<li>The route is via weak inter-combination transitions from the 3d .<sup>3</sup>D term to 2s2.2p4 .<sup>1</sup>D and .<sup>1</sup>S</li>
+<li>Branching ratio of each is only 1e-05 compared with branching ratio of 0.275 to 3p .<sup>3</sup>P, which is upper level of 8447 &Aring; line</li>
+<li>This means that this mechanism <b>cannot be important</b>
+<ul class="org-ul">
+<li>We would get F(&lambda;6300)/F(&lambda;8447) &lt; 1e-4 from this mechanism</li>
+</ul></li>
+</ul></li>
+<li>Possible dissociation pumping of 5577
+<ul class="org-ul">
+<li>van Dishoek 1983JChPh..79..873V seems the best reference</li>
+<li><p>
+Summary of results for dissociation rates in optically thin cloud exposed to the interstellar radiation field
+</p>
+<pre class="example">
+The photodissociation rate is 4.6 x 10^-10 /s if the maximum
+contribution of the bound states is used and 3.6 x 10^-10 /s if the
+estimated dissociation efficiencies are adopted. About 45% of the
+dissociations lead to O(3P) + H, about 50% to O(1D) + H and about 5%
+to O(1S) + H.
+</pre></li>
+<li>This implies that the flux ratio of F(&lambda;5577)/F(&lambda;6300) = (5 / 50) (6300 / 5577) = 0.113 for the dissociation pumped component.
+<ul class="org-ul">
+<li>This is 8 times higher than the ratio we get from collisional excitation</li>
+<li>But it would be reduced slightly by the extra reddening down to the disk surface</li>
+<li>However, it might be increased if the dissociation channel via  2(B) .<sup>2</sup>&Sigma;<sup>+</sup> were enhanced, which would be the case for a FUV spectrum that was not so soft as the ISRF <b>see below</b></li>
+</ul></li>
+<li>For the total dissociation rate, the UMIST network uses 3.5e-10, which is very similar to van Dishoek's value.</li>
+<li>Further details
+<ul class="org-ul">
+<li>The .<sup>1</sup>S O<sup>0</sup> state comes from dissociation via the 2(B) .<sup>2</sup>&Sigma;<sup>+</sup> molecular OH state
+<ul class="org-ul">
+<li>Peak x-section at 11 eV</li>
+</ul></li>
+<li>The .<sup>1</sup>D O<sup>0</sup> state comes from dissociation via the following OH states:
+<ul class="org-ul">
+<li>1(A) .<sup>2</sup>&Sigma;<sup>+</sup> (probably unimportant unless spectrum is very soft)</li>
+<li>1 .<sup>2</sup>&Delta;: peak x-section at 9 eV</li>
+<li>2 .<sup>2</sup>&Pi;: sharp peak at 10 ev</li>
+</ul></li>
+<li>In the presence of strong Ly alpha, the 1 .<sup>2</sup>&Delta; and 2(B) .<sup>2</sup>&Sigma;^+ channels will be favored since they have significant cross section at 10 ev</li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: William Henney</p>
+<p class="date">Created: 2022-09-10 Sat 14:04</p>
+<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

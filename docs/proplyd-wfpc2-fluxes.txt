@@ -1,0 +1,73 @@
+		   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+		    COMMENTS ON SECTIONS 3.1 AND 3.2
+
+			     William Henney
+		   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+Table of Contents
+─────────────────
+
+
+
+
+• Sec 3.1.2 para 2
+  ┌────
+  │ Line absorption is not a significant effect for forbidden lines (one
+  │ of the characteristics that makes them efficient cooling mechanisms)
+  │ because of the low occupancy of the lower state of the transition
+  └────
+
+  It is correct that self absorption is not significant for forbidden
+  lines but the explanation here is incorrect. It is not due low
+  occupancy of the lower state (for 6300 the lower state is the ground
+  state). Instead it is due to the low radiative absorption cross
+  section (due to the low oscillator strength of the transition).
+• Sec 3.1.2 para 2
+  ┌────
+  │ the dust-to-gas mass ratio in the external photoevaporative wind is
+  │ also highly depleted (easily by at around 2 orders of magnitude)
+  └────
+
+  If there is so little dust in the photoevaporative wind, then what
+  causes the 10 to 20 micron emission from the proplyds?  From section
+  2, equation (1) it seems that you *are* including the effect of dust
+  opacity in attenuating the incident FUV intensity, so in principal you
+  know A_V to each point in your model, right?  But I couldn't find
+  anywhere where you say what factor you use to relate A_V to the
+  hydrogen column.
+• Sec 3.1.2 para 3, around equation (5).  I think it would be better to
+  state explicitly that the population is found by assuming an
+  equilibrium between dissociation pumping and radiative decay. It seems
+  clear from the equation that this is what you have done, but the text
+  seems to skirt around the issue.
+• Sec 3.1.2 para 4
+  ┌────
+  │ Additional contributions from the disc itself or outflows/jets are
+  │ ignored
+  └────
+
+  Do you really mean to say "disc itself" here?  What extra contribution
+  from the disc do you think might be missing? It looks to me like your
+  models include all the OH-pumped 6300 emission from the surface of the
+  disc and the extended evaporation flow. What you are missing is any
+  collisionally excited 6300 emission, which might include three
+  separate contributions: (1) jets/outflows (as you mention); (2)
+  magnetospheric accretion from the inner disc onto the star; (3) the
+  ionization front if present. And you can argue that all of these can
+  potentially be observationally distinguished, either spatially or in
+  velocity, or both.
+• Figure 2. I just wanted to say that this figure is great!  I think it
+  really helps in understanding how the physical structure of the models
+  affects the [O I] emission.
+• Sec 3.2 para 3
+  ┌────
+  │ The key distinction between ....
+  └────
+
+  Are there any further qualitative changes in the models as you go
+  beyond 1e4 G0? Given that in the proplyds we have up to 1e7
+• Figure 3.  In the 5000 G0 case, it appears as though the OH abundance
+  and the 6300 emission have their peak values over a large volume of
+  the flow.  But is this really true, or is it just an artefact of the
+  fact that the color scale gets saturated?
