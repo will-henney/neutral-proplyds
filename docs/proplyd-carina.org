@@ -1,0 +1,56 @@
+* Adapting our results for the Carina proplyds
+Tom and Leonardo Testi want my help in disentangling the ionization
+front component to the [O I] emission from the disk  wind component
+
+This is for application to measurements of YSOs in the Carina nebula
+** What I need to do
+- For the Orion proplyd sample, I should estimate what fraction of the
+  [O I] emission comes from the ionization front
+- I think I already have this - I seem to remember that I assumed that
+  the Ha and [O I] profiles from the i-front were the same
+- Yes, the assumption seems to have been that the profile of the ratio
+  (proplyd / bg) is the same for Ha as for [O I]
+  - [X] Look for an explicit statement of this in what I did
+    - Yes, this is exactly what we did
+    - In cases where the ionization front is clearly resolved, such as
+      182-413, we can check this directly by looking at the two profiles
+    - In general this seems to work, but there are some cases with discrepancies
+      - In 182-413 the [O I] profile exceeds the Ha profile in most of
+        the interior of the proplyd, but it could be argued that this
+        is precisely because of the neutral disk wind, rather than the
+        ionization front
+      - In 168-326 (LV1) we see the complete opposite. The [O I] profile is
+        weaker than the Ha profile pretty much everywhere.
+        - In this case, it may be related to the high ratio [O I]/Ha
+          in the BG, which is about 0.09, as opposed to 0.03 in more
+          typical cases
+        - Perhaps this is due to continuum in the 630n filter, or
+          possibly [S III]
+        - Others, such as 158-326 are similar, again with large [O
+          I]/Ha ratio in the BG
+      - Other cases have the [O I] and Ha tracking each opther
+        approximately in the i-front part
+        - examples are 177-341, 170-337, 180-331, 158-327, etc
+  - So what are the relatives contribution of i-front and disk  wind
+    to the total [O I] emission?
+    - We will have to do this properly in the notebook, but just by
+      eye we can see some clear variations:
+      - One extreme is close-in proplyds such as 168-326, where the
+        disk [O I] is essentially zero, so 100% comes from i-front
+        - The same applies to many others with separation less than 10
+          arcsec from th1c
+      - Opposite extreme is case like 183-419 where Ha is very low, so
+        i-front contribution  to [O I] is essentialy zero
+      - More typical case is 177-341, where contribution of i-front is
+        about 50%
+      - There seems to be a clear trend with separation, but we need
+        to run the notebook to see it - do  this tomorrow
+** [2023-12-21 Thu] Message from Tom
+#+begin_quote
+Leonardo (cc’d) has spectroscopic data towards a large number of YSOs in Tr 14 (e.g. https://ui.adsabs.harvard.edu/abs/2023arXiv230914168I/abstract). One of the things that would be nice to try and do with the data is compare against the recent Ballabio + 2023 paper on [OI] 6300 that you helped us with. They can certainly get the line luminosity and may be able to get the accretion luminosity too for the L_OI/L_acc diagnostic.
+
+However with this dataset you dont spatially resolve proplyds so its hard to separate the I-front and PDR emission. I was wondering if it might be possible to look at the ONC proplyds and compare the PDR and I-front OI contributions to provide some rough correction for the spatially unresolved data (e.g. are the PDR and I-front line luminosities similar). We would be looking for global trends in the data (e.g. as a function of G0) so a representative fraction of luminosity in the PDR should be ok across the overall population, even if you wouldn’t trust it looking at an individual source. Obviously if it varies wildly it might not still be viable.
+
+Presumably this would be quite straightforward for you as you already have a script to calculate only the PDR component, so it’d just be a case of printing out the I-front component that you previously threw out. Would this be something you could take a look at for us?
+
+#+end_quote
