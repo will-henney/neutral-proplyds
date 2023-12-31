@@ -7,25 +7,31 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.11.1
+#       jupytext_version: 1.15.2
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # # Extract profiles for all proplyds and all filters
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Library imports
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ### General libraries
 
+# + pycharm={"name": "#%%\n"}
 import numpy as np 
 from pathlib import Path
 import pandas as pd
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Astronomy libraries
 
+# + pycharm={"name": "#%%\n"}
 from astropy.coordinates import SkyCoord, Angle
 import astropy.units as u
 from astropy.io import fits
@@ -34,23 +40,31 @@ from astropy.table import Table, QTable
 from astropy.nddata import Cutout2D
 import regions
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Graphics libraries
 
+# + pycharm={"name": "#%%\n"}
 from matplotlib import pyplot as plt
 import seaborn as sns
 
+# + pycharm={"name": "#%%\n"}
 sns.set_context("talk")
 sns.set_color_codes()
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Paths to the data files
 
+# + pycharm={"name": "#%%\n"}
 datapath = Path.cwd().parent / "data"
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Get all the images we need in various filters
 
+# + pycharm={"name": "#%%\n"}
 pcfilters = ["f631n", "f673n", "f656n", "f658n", "f547m", ]
 
 
+# + pycharm={"name": "#%%\n"}
 class FilterImage:
     """WFPC2 PC image in a given filter
     
@@ -77,67 +91,71 @@ class FilterImage:
             *np.meshgrid(np.arange(nx), np.arange(ny))
         )
 
+# + pycharm={"name": "#%%\n"}
 
 
+
+# + pycharm={"name": "#%%\n"}
 imdict = {
     name: FilterImage(name) for name in pcfilters
 }
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Get all the proplyd source coordinates
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # Get the sources from the DS9 region file that I made by hand.
 
-# + tags=[]
+# + pycharm={"name": "#%%\n"}
 regfile = datapath / "pcmos-proplyds.reg"
 regs = regions.Regions.read(regfile, format="ds9")
-# -
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # Use θ¹ Ori C as origin to define position angles.
 
-# + tags=[]
+# + pycharm={"name": "#%%\n"}
 c0 = SkyCoord.from_name("* tet01 Ori C")
-# -
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # Extract the information that we want from the region file. Construct a list of dicts that give source name and coordinates:
 
-# + tags=[]
+# + pycharm={"name": "#%%\n"}
 source_list = [
     {"Name": r.meta["label"],  "ICRS": r.center} 
     for r in regs 
     if "label" in r.meta
 ]
-# -
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # Convert to an `astropy.table.QTable` of the sources. Add columns for PA to θ¹ Ori C (in degrees) and Separation from θ¹ Ori C (in arcsec):
 
-# + tags=[]
+# + pycharm={"name": "#%%\n"}
 source_table = QTable(source_list)
 source_table["PA"] = source_table["ICRS"].position_angle(c0).to(u.deg)
 source_table["Sep"] = source_table["ICRS"].separation(c0).to(u.arcsec)
 source_table.add_index("Name")
 source_table
-# -
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # By turning the `Name` column into an index, we can extract a given source by name. For example:
 
-# + tags=[]
+# + pycharm={"name": "#%%\n"}
 source_table.loc["182-413"]
-# -
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # The advantage of using a `QTable` is that the units remain attached to the values:
 
-# + tags=[]
+# + pycharm={"name": "#%%\n"}
 source_table.loc["177-341W"]["PA"], source_table.loc["180-331"]["Sep"]
 
 
-# -
-
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Cutout image of a proplyd in a particular filter
 
-# + [markdown] tags=[]
+# + [markdown] pycharm={"name": "#%% md\n"}
 # We use `astropy.nddata.Cutout2D` to make cutouts of the sharp image, the smooth image, and the coordinate array. 
-# -
 
+# + pycharm={"name": "#%%\n"}
 class ProplydCutout:
     
     def __init__(self, pdata, image: FilterImage, size=2 * u.arcsec):
@@ -190,12 +208,16 @@ class ProplydCutout:
         self.mask = (self.r <= r_out) & ((cth >= mu_min) | (self.r <= r_in))
 
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # Test that the cutout works:
 
+# + pycharm={"name": "#%%\n"}
 p = ProplydCutout(source_table.loc["177-341W"], imdict["f547m"])
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # We can plot it with imshow, but that is rotated with respect to equatorial axes.
 
+# + pycharm={"name": "#%%\n"}
 fig, ax = plt.subplots(subplot_kw=dict(projection=p.wcs))
 ax.imshow(p.image, vmin=0, vmax=15, cmap="gray_r")
 ax.scatter(
@@ -208,8 +230,10 @@ ax.scatter(
 )
 ...;
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # We can use the orthogonal wcs and pcolormesh to rotate the image so that axes are aligned with RA and Dec.
 
+# + pycharm={"name": "#%%\n"}
 fig, ax = plt.subplots(
     figsize=(6, 6),
     subplot_kw=dict(projection=p.owcs),
@@ -240,21 +264,26 @@ ax.set(
 )
 ...;
 
+# + pycharm={"name": "#%%\n"}
 j, i = np.unravel_index(np.argmin(p.r, axis=None), p.r.shape)
 p.r[j, i].arcsec
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Make cutout for all proplyds and all filters
 #
 # Add them in to the table of sources
 
+# + pycharm={"name": "#%%\n"}
 for fname in pcfilters:
     source_table[fname] = [ProplydCutout(row, imdict[fname]) for row in source_table]
 
+# + pycharm={"name": "#%%\n"}
 source_table[pcfilters]
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Do the images
 
-# + tags=[]
+# + pycharm={"name": "#%%\n"}
 nprops = len(source_table)
 ns = len(pcfilters)
 fig, axes = plt.subplots(nprops, ns, figsize=(3 * ns, 3 * nprops))
@@ -273,10 +302,10 @@ for j, row in enumerate(source_table):
 sns.despine(left=True, bottom=True)
 fig.tight_layout(pad=0, h_pad=0.1, w_pad=0.1)
 
-# + [markdown] tags=[]
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Do the profiles
-# -
 
+# + pycharm={"name": "#%%\n"}
 nbins = 20
 fig, axes = plt.subplots(nprops, ns, figsize=(3 * ns, 2.0 * nprops), sharex=True, sharey='row')
 for j, row in enumerate(source_table):
@@ -301,6 +330,7 @@ for j, row in enumerate(source_table):
 sns.despine()
 fig.tight_layout(h_pad=0.3, w_pad=0.3)
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # I have made sure that all the profiles in the same row share a common y scale, so that we can easily compare the different profiles. 
 #
 # We can see that in many cases the 631 profile is significantly higher than the sum of the 547 and the 656.  This is good evidence that we are seeing [O I] from the neutral disk wind. 
@@ -309,11 +339,13 @@ fig.tight_layout(h_pad=0.3, w_pad=0.3)
 #
 # We have also added a spatial averaging of the profiles, calculated using a weighted histogram. This is devloped further in the following section. 
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Put all the profiles on a common uniform grid of radii
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # Test method for determining bin edges that is robust to rounding errors:
 
-# +
+# + pycharm={"name": "#%%\n"}
 bin_size = 0.05
 epsilon = 0.01 # Fake rounding error
 rmin = 0.0 + epsilon
@@ -324,7 +356,7 @@ edges = np.arange(nbins + 1) * bin_size
 edges
 
 
-# +
+# + pycharm={"name": "#%%\n"}
 class ProplydProfiles:
     """
     Radial profiles of proplyd brightness for multiple filters
@@ -387,26 +419,30 @@ class ProplydProfiles:
 
         
 
-        
 
-# + tags=[]
+
+# + pycharm={"name": "#%%\n"}
 pp = ProplydProfiles(source_table.loc["177-341W"], pcfilters)
-# -
 
+# + pycharm={"name": "#%%\n"}
 pp.mean
 
+# + pycharm={"name": "#%%\n"}
 pp.npix
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # Check that the BG mean and sigma are working.  Note that these still need to be flux callibrated
 
-# + tags=[]
+# + pycharm={"name": "#%%\n"}
 pp.bgmean
-# -
 
+# + pycharm={"name": "#%%\n"}
 pp.bgsig
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # The sigma is very small (5 to 10%) because we are sampling a region that is smaller than the smoothing scale, so we might as well ignore it. 
 
+# + pycharm={"name": "#%%\n"}
 fig, ax = plt.subplots()
 for fname in pcfilters:
     line, = ax.plot("r", fname, data=pp.mean, label=fname.upper())
@@ -426,21 +462,25 @@ ax.set(
 )
 ...;
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Isolate the 6300 emission from the neutral flow
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # We want to subtract two things from the raw F631N brightness:
 #
 # 1. The continuum emission in the filter bandpass. This is mainly direct starlight, but will include a bit of scattered starlight and bound-free atomic continuum too. 
 #
 # 2. The [O I] 6300 line emission that comes from the ionization front instead of from the neutral gas. This should be sharply peaked at an ionization fraction of $x = 0.5$ because of the $x (1 - x)$ dependence.
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # For (1) we can subtract off the broader band filter F547M.  But if we only want to subtract the star part, then we can use a scaled version of Ha F656N to estimate the atomic continuum contribution. I choose a value of `atfac` so that the emission at the i-front is cancelled out. Note that this ignores the fact that F656N itself will have a small continuum contribution. *This does not work very well – I am going to try to calculate it better*
 #
 # For (2), we can just subtract the Ha F656N profile. This will over-correct for fully ionized part of the proplyd flow, which might lead to negative parts of the profile. 
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Pilot study of 177-341W
 
-# +
+# + pycharm={"name": "#%%\n"}
 atfac = 0.55
 cont = pp.mean["f547m"] - atfac * (pp.mean["f656n"] - 1)
 oin = pp.mean["f631n"] - (cont - 1) - (pp.mean["f656n"] - 1)
@@ -476,16 +516,18 @@ ax.set(
 sns.despine()
 fig.tight_layout()
 ...;
-# -
 
+# + pycharm={"name": "#%%\n"}
 fig.savefig("proplyd-pc-example.pdf")
 fig.savefig("proplyd-pc-example.jpg", dpi=300)
 
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Extracting the profile of stellar continuum
 #
 # What I will try and do is to assume that beyond a certain point (say 0.2 arcsec) all the continuum is atomic and therefore proportional to Ha.  So I will calculate the average F547M/F656N in that range and use it as my `atfac` to help isolate the stellar peak at the origin.
 
+# + pycharm={"name": "#%%\n"}
 def find_atomic_factor(pp: ProplydProfiles, rstar=0.2):
     m = pp.r >= rstar
     f547m = np.sum(pp.mean["f547m"][m] - 1)
@@ -493,16 +535,20 @@ def find_atomic_factor(pp: ProplydProfiles, rstar=0.2):
     return f547m / f656n
 
 
+# + pycharm={"name": "#%%\n"}
 pp = ProplydProfiles(source_table.loc["180-331"], pcfilters)
 find_atomic_factor(pp)
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # For some of the sources, this does not give a reasonable value (which I am defining as between 0.2 and 1.0), so for those I will just assume 0.5.
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ### Isolated 6300 profile for all sources
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # Make lists of sources that  are particularly weak or particularly strong, since we will need to change the plot limits for those.
 
-# + tags=[]
+# + pycharm={"name": "#%%\n"}
 weak_sources = [
     "156-308 NEW", "174-414", "183-427", "183-419", "182-413", 
     "175-355", "152-319", "154-321 NEW", "154-324", "179-354",
@@ -511,7 +557,7 @@ weak_sources = [
 bright_sources = ["167-317", "163-317", "158-323", "171-340", "176-325"]
 
 
-# +
+# + pycharm={"name": "#%%\n"}
 class ProplydResults:
     """Final results extracted from filter images"""
     def __init__(self, pp: ProplydProfiles):
@@ -531,8 +577,15 @@ class ProplydResults:
         self.cont = pp.mean["f547m"] - self.atfac * (self.ha - 1)
         # Do not let it go below BG 
         self.cont = np.maximum(self.cont, 1.0)
+        # Limit the starlight in the first pixel to be no higher than f631n
+        if self.cont[0] > self.f631n[0]:
+            correction = self.f631n[0] / self.cont[0]
+        else:
+            correction = 1.0
         # [O I] 6300 emission with continuum and i-front removed
-        self.oin = self.f631n - (self.cont - 1) - (self.ha - 1)
+        self.oin = self.f631n - (correction * self.cont - 1) - np.maximum(self.ha - 1, 0.0)
+        # [O I] 6300 emission from BOTH i-front and neutral disk
+        self.oib = self.f631n - (correction * self.cont - 1)
         # Assume all the errors can be added in quadrature
         self.sig = np.sqrt(
             pp.sigma["f547m"]**2 / pp.npix["f547m"] 
@@ -541,11 +594,11 @@ class ProplydResults:
         )
          
 
-# -
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # Make plots of the profiles for each source. 
 
-# +
+# + pycharm={"name": "#%%\n"}
 ncols = 5
 nrows = 1 + nprops // ncols
 
@@ -635,22 +688,25 @@ fig.legend(
 sns.despine()
 fig.tight_layout()
 ...;
-# -
 
+# + pycharm={"name": "#%%\n"}
 fig.savefig("proplyd-pc-profiles.pdf")
 fig.savefig("proplyd-pc-profiles.jpg", dpi=300)
 
 
+# + [markdown] pycharm={"name": "#%% md\n"} jupyter={"outputs_hidden": false}
+#
 # ## Calculate the final fluxes for each proplyd
 #
-# We can sum the radial brightness profile multiplied by the number of pixels that contributed to each radial bin. This will give us the total flux in detector units (we still need to do the absolute flux callibration afterwards). We do this for three profiles: Hα, neutral [O I], and stellar continuum. 
+# We can sum the radial brightness profile multiplied by the number of pixels that contributed to each radial bin. This will give us the total flux in detector units (we still need to do the absolute flux callibration afterwards). We do this for three profiles: Hα, neutral [O I], and stellar continuum.
 #
-# We will also calculate the mean brightness-weighted radius of each profile. 
+# We will also calculate the mean brightness-weighted radius of each profile.
 #
 # There are a few details that we need to consider: masking and errors/upper limits.  For Hα we mask out bins that have brightness below the BG value. This is so that we are not affected by the shadow disks, which would give negative brightness after BG subtraction. This mainly only effects 182-413.
 #
 # For [O I] we only include radii up to the 1.5 times the mean radius in Hα so that we are not affected by noise or unrelated emission at larger radii. We also only include bins where the residual oi emission exceeds the BG value. We do separate calculations (with separate masks) for the central value and for +/- 1 sigma. In some cases there will be no bins where _mean minus sigma_ exceeds the BG, so we count these as non-detections, but we still have upper limits from the _mean plus sigma_. I do not do any reduction of the sigma from averaging multiple bins since the uncertainties are systematic, at least in part. (Although this means that we are probably overestimating the error bars for the larger proplyds).
 
+# + pycharm={"name": "#%%\n"}
 def calculate_fluxes(pr: ProplydResults):
     """Sum the brightness profiles to get fluxes
     
@@ -698,6 +754,11 @@ def calculate_fluxes(pr: ProplydResults):
         ((pr.oin - 1 - pr.sig) * pr.pp.npix["f631n"])[moi_lo]
     ) * pr.pp.bgmean['f631n']
 
+    # Repeat for the sum of i-front and neutral contributions to [O I]
+    pr.flux_oib = np.sum(
+        ((pr.oib - 1) * pr.pp.npix["f631n"])[moi]
+    ) * pr.pp.bgmean['f631n']
+    
     # Repeat for the stellar continuum
     mcont = (pr.cont >= 1.0) & (pr.r < rfac * pr.r_ha)
     pr.flux_cont = np.sum(
@@ -719,39 +780,48 @@ def calculate_fluxes(pr: ProplydResults):
     return pr
 
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # Test it out for a few of the proplyds
 
-# + tags=[]
+# + pycharm={"name": "#%%\n"}
 pres = calculate_fluxes(
     ProplydResults(
         ProplydProfiles(source_table[27], pcfilters)
     )
 )
-# -
 
+# + pycharm={"name": "#%%\n"}
 pres.r_ha, pres.r_cont, pres.r_oi
 
-pres.flux_ha, pres.flux_cont, pres.flux_oi, pres.flux_oi_lo, pres.flux_oi_hi 
+# + pycharm={"name": "#%%\n"}
+pres.flux_ha, pres.flux_cont, pres.flux_oi, pres.flux_oi_lo, pres.flux_oi_hi, pres.flux_oib
 
+# + pycharm={"name": "#%%\n"}
 pres.nha, pres.noi, pres.noi_lo, pres.noi_hi, pres.ncont
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # OK, that seems to be working more or less as designed.
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Absolute flux and luminosity calibration
 #
 # In the org file I derive these calibrations. Physical flux per DN of the images.
 
+# + pycharm={"name": "#%%\n"}
 F0_oi = 3.822e-17 * u.erg / u.s / u.cm**2
 F0_ha = 6.86e-17 * u.erg / u.s / u.cm**2
 
+# + pycharm={"name": "#%%\n"}
 D = 410 * u.pc
 A = 4 * np.pi * D**2
 L0_oi = (F0_oi * A).to(u.solLum)
 L0_ha = (F0_ha * A).to(u.solLum)
 L0_ha
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # ## Table of final results
 
+# + pycharm={"name": "#%%\n"}
 results = []
 for row in source_table:
     pres = calculate_fluxes(
@@ -767,6 +837,7 @@ for row in source_table:
             "L_oi": pres.flux_oi * L0_oi,
             "L_oi_lo": pres.flux_oi_lo * L0_oi,
             "L_oi_hi": pres.flux_oi_hi * L0_oi,
+            "L_oi_b": pres.flux_oib * L0_oi,
             "F_cont": pres.flux_cont,
             "r_ha": pres.r_ha * u.arcsec,
             "r_oi": pres.r_oi * u.arcsec,
@@ -784,21 +855,23 @@ for col in results_table.itercols():
     if col.info.name in ["s/n"]:
         col.info.format = ".2f"
 
+# + pycharm={"name": "#%%\n"}
 results_table.info
 
+# + pycharm={"name": "#%%\n"}
 upper_limits = results_table["L_oi_lo"] <= 0.0
 results_table["L_oi"][upper_limits] = np.nan
 invalid_cont = results_table["F_cont"] <= 0.0
 results_table["F_cont"][invalid_cont] = np.nan
 
-# + tags=[]
+# + pycharm={"name": "#%%\n"}
 results_table.show_in_notebook()
-# -
 
+# + pycharm={"name": "#%%\n"}
 results_table.write("proplyd-pc-luminosities.ecsv", overwrite=True)
 
-# + tags=[]
-fig, axes = plt.subplots(2, 1, sharex=True, figsize=(8, 8))
+# + pycharm={"name": "#%%\n"}
+fig, axes = plt.subplots(3, 1, sharex=True, figsize=(8, 12))
 axes[0].scatter(
     "Sep",
     "L_ha",
@@ -817,13 +890,28 @@ axes[1].scatter(
     cmap="magma_r",
     edgecolor="k",
 )
+axes[2].scatter(
+    results_table["Sep"],
+    results_table["L_oi"] / results_table["L_oi_b"],
+    s=30 * results_table["s/n"] * results_table["r_oi"] / 0.05,
+    c=results_table["r_oi"],
+    cmap="magma_r",
+    edgecolor="k",
+)
+
 for row in results_table:
     if np.isfinite(row["L_oi"]):
         axes[1].plot(
             [row["Sep"].value, row["Sep"].value],
             [row["L_oi_lo"].value, row["L_oi_hi"].value],
             color="r",
-            alpha=0.4,
+            alpha=row["s/n"]/10,
+        )
+        axes[2].plot(
+            [row["Sep"].value, row["Sep"].value],
+            [row["L_oi_lo"].value / row["L_oi_b"].value, row["L_oi_hi"].value / row["L_oi_b"].value],
+            color="r",
+            alpha=row["s/n"]/10,
         )
     else:
         axes[1].scatter(
@@ -834,27 +922,39 @@ for row in results_table:
             s=100,
             alpha=0.4,
         )
-for ax in axes:
+        axes[2].scatter(
+            row["Sep"].value,
+            row["L_oi_hi"].value / row["L_oi_b"].value,
+            marker="$\downarrow$",
+            color="r",
+            s=100,
+            alpha=0.4,
+        )
+for ax in axes[:2]:
     ax.set(
         xscale="log",
         yscale="log",
         xlim=[4.0, 100.0],
     )
+axes[2].set(
+    ylim=[0, 1],
+)
 axes[-1].set_xlabel("Separation from θ¹ Ori C, arcsec")
 axes[0].set_ylabel("Hα luminosity, L$_⊙$")
 axes[1].set_ylabel("[O I] λ6300 luminosity, L$_⊙$")
+axes[2].set_ylabel("[O I] neutral fraction")
 sns.despine()
 fig.tight_layout()
 ...;
-# -
 
-# The color is proportional to the mean oi radius (darker is larger) and is the same in both panels.  The symbol sizes in the upper panel are proportional to the mean ha raius, while in the lower panel are proportional to the s/n of the oi flux measurement. Downward-pointing red arrows are upper limits on the oi from the neutral disk. This mainly applies to the innermost proplyds that  are very small and very bright in ha, where all the oi emission is consistent with coming from the i-front. 
+# + [markdown] pycharm={"name": "#%% md\n"}
+# The color is proportional to the mean oi radius (darker is larger) and is the same in all panels.  The symbol sizes in the upper panel are proportional to the mean ha radius, while in the lower panels are proportional to the s/n of the oi flux measurement. Downward-pointing red arrows are upper limits on the oi from the neutral disk. This mainly applies to the innermost proplyds that  are very small and very bright in ha, where all the oi emission is consistent with coming from the i-front. 
 
-# + tags=[]
+# + pycharm={"name": "#%%\n"}
 fig.savefig("proplyd-pc-L-sep.pdf")
 fig.savefig("proplyd-pc-L-sep.jpg", dpi=300)
 
-# +
+# + pycharm={"name": "#%%\n"}
 fig, ax = plt.subplots(figsize=(8, 8))
 
 # Show approximate linear relationship
@@ -905,13 +1005,15 @@ ax.set(
 sns.despine()
 fig.tight_layout()
 ...;
-# -
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # The gray dashed line shows the relationship `oi = 0.01 ha`, which is a reasonable approximation to the trend. The size of the symbols is a rough indication of the s/n of the oi measurements.  Note that if we restricted ourselves to the sources with the best s/n then we would be biasing the results upwards, since we can make better measurements when oi and oi/ha are larger. 
 
+# + pycharm={"name": "#%%\n"}
 fig.savefig("proplyd-pc-L-L.pdf")
 fig.savefig("proplyd-pc-L-L.jpg", dpi=300)
 
+# + pycharm={"name": "#%%\n"}
 fig, ax = plt.subplots(figsize=(8, 8))
 ax.scatter(
     "r_ha",
@@ -933,9 +1035,126 @@ sns.despine()
 fig.tight_layout()
 ...;
 
+# + [markdown] pycharm={"name": "#%% md\n"}
 # The blue line is r(oi) = r(ha), while the orange line here is for r(oi) = 0.5 r(ha), which represents the data better.  This is consistent with the finding that the disk radius is typically half of the ionization front radius, and it shows that we have been successful in removing the i-front contribution to the oi emission. Again, the symbol size is proportional to the s/n. 
 
+# + pycharm={"name": "#%%\n"}
 fig.savefig("proplyd-pc-r-r.pdf")
 fig.savefig("proplyd-pc-r-r.jpg", dpi=300)
 
-  
+# + [markdown] pycharm={"name": "#%% md\n"} jupyter={"outputs_hidden": false}
+# # Profiles of just the positive detections
+
+# + [markdown] pycharm={"name": "#%% md\n"} jupyter={"outputs_hidden": false}
+#
+
+# + pycharm={"name": "#%%\n"} jupyter={"outputs_hidden": false}
+new_table = source_table.copy()
+badrows, = np.where(upper_limits)
+new_table.remove_rows(list(badrows))
+new_table.remove_rows([new_table.loc[s].index for s in ["161-328", "158-327"]])
+len(new_table)
+
+# + pycharm={"name": "#%%\n"} jupyter={"outputs_hidden": false}
+ymaxes =  {
+    "170-337": 18,
+    "171-340": 30,
+}
+
+# + pycharm={"name": "#%%\n"} jupyter={"outputs_hidden": false}
+
+ncols = 4
+nrows = 5
+
+fig, axes = plt.subplots(nrows, ncols, figsize=(3 * ncols, 1.5 * nrows), sharex=True)
+
+for ax, row in zip(axes.flat, new_table):
+    pp = ProplydProfiles(row, pcfilters)
+    pres = ProplydResults(pp)
+
+    oiline, = ax.plot(
+        pres.rleft, pres.oin - 1,
+        label="residual [O I]", linewidth=5,
+        drawstyle="steps-post",
+    )
+    ax.fill_between(
+        pres.rleft,
+        (pres.oin - 1) - 1 * pres.sig,
+        (pres.oin - 1) + 1 * pres.sig,
+        color=oiline.get_color(),
+        alpha=0.3,
+        linewidth=0,
+        step="post",
+    )
+    haline, = ax.plot(
+        pres.rleft, pres.ha - 1,
+        label="Hα",
+        drawstyle="steps-post",
+    )
+    cline, = ax.plot(
+        pres.rleft, pres.cont - 1,
+        label="stellar continuum",
+        drawstyle="steps-post",
+        color="r",
+        linestyle="dashed",
+        linewidth=3,
+    )
+    ax.fill_between(
+        pres.rleft,
+        0.0,
+        pres.cont - 1,
+        color=cline.get_color(),
+        alpha=0.1,
+        linewidth=0,
+        step="post",
+    )
+    oiline2, = ax.plot(
+        pres.rleft, pres.f631n - 1,
+        label="F631N",
+        drawstyle="steps-post",
+        color=oiline.get_color(),
+        linewidth=1,
+    )
+
+    #ax.plot(pp.mean["r"], pp.mean["f631n"] - 1, label="oi + cont")
+
+    ax.axhline(0.0, linewidth=1, color="k")
+    ax.axvline(0.0, linewidth=1, color="k")
+
+    #ax.legend()
+    label = row['Name'].replace(" NEW", "")
+    #label += "\n" + f"[O I] BG = {pp.bgmean['f631n']:.2f}"
+    #label += "\n" + f"Hα BG = {pp.bgmean['f656n']:.2f}"
+
+    ax.text(0.9, 0.9, label, transform=ax.transAxes, va="top", ha="right", fontsize='small')
+    if row['Name'] in weak_sources:
+        yscale = 3.5
+    elif row['Name'] in bright_sources:
+        yscale = 30.0
+    else:
+        yscale = 18.0
+    yscale = 1.1 * max(np.max(pres.cont - 1), np.max(pres.f631n - 1))
+    ax.set(ylim=[-yscale / 5, yscale], xlim=[0, None])
+
+for ax in axes[-1, :]:
+    ax.set(xlabel="Radius, arcsec")
+for ax in axes[2:3, 0]:
+    ax.set(ylabel="Brightness / Background")
+
+fig.legend(
+    handles=[oiline2, oiline, haline, cline],
+    ncol=4,
+    loc="lower center",
+    bbox_to_anchor=(0.5, 0.9),
+)
+
+sns.despine()
+fig.tight_layout(rect=(0, 0, 1, 0.9))
+...;
+
+# + pycharm={"name": "#%%\n"} jupyter={"outputs_hidden": false}
+fig.savefig("proplyd-pc-select.pdf")
+fig.savefig("proplyd-pc-select.jpg", dpi=300)
+
+# + pycharm={"name": "#%%\n"} jupyter={"outputs_hidden": false}
+

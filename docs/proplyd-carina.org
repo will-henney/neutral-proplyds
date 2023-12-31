@@ -45,6 +45,16 @@ This is for application to measurements of YSOs in the Carina nebula
         about 50%
       - There seems to be a clear trend with separation, but we need
         to run the notebook to see it - do  this tomorrow
+*** Return to the notebook [2023-12-30 Sat]
+- I have now rerun the notebook and modified to calculate the fraction of [O I] luminosity that comes from the neutral disk wind
+- [[file:../notebooks/proplyd-pc-L-sep.pdf]]
+- The fraction is low for separations less than 15 arcsec from Trapezium, but for farther out proplyds, it is more than 50 to 70%
+*** TODO Convert from distance to G0
+:LOGBOOK:
+- State "TODO"       from              [2023-12-31 Sun 01:15] \\
+  Do this tomorrow
+:END:
+
 ** [2023-12-21 Thu] Message from Tom
 #+begin_quote
 Leonardo (cc’d) has spectroscopic data towards a large number of YSOs in Tr 14 (e.g. https://ui.adsabs.harvard.edu/abs/2023arXiv230914168I/abstract). One of the things that would be nice to try and do with the data is compare against the recent Ballabio + 2023 paper on [OI] 6300 that you helped us with. They can certainly get the line luminosity and may be able to get the accretion luminosity too for the L_OI/L_acc diagnostic.
