@@ -55,6 +55,26 @@ This is for application to measurements of YSOs in the Carina nebula
   Do this tomorrow
 :END:
 
+**** Equations for G0
+- From Henney & Arthur 2019, Bowshock Paper III
+  - In Draine units: U = 14.7 L_4 / R_pc^2
+  - Habing units depends on fraction of bolometric luminosity that is emitted in FUV band. For early O stars this is 0.4, giving G_0 = 6 U
+  - So G_0 = 90 L_4 / R_pc^2
+
+**** Values of G0 in Carina and Orion
+- In Orion we have luminosity of th1C as 2e5 Lsun approx, but I need to get better value
+  - 15 arcsec corresponds to a distance of 0.03 pc
+  - So this means G_0 = 90 20 / 0.03**2 = 2e6
+- Consistency check with Stoerzer & Hollenbach (1999)
+  - G0 = 2e7 at 0.01 pc
+  - G0 = 5e4 at 0.3 pc
+- The ionizing luminosity of Tr 14 is about 20 times Orion, so presumably the bolometric luminosity factor is similar
+  - So G0 = 2e6 will occur at a radius that is sqrt(20) times larger, so 0.134 pc
+  - But Carina is at 2350 pc, which is 5.66 times farther, so the angular separation is sqrt(20) / 5.66 = 0.79 times larger, so 12 arcsec
+    - This is much smaller than typical radii of cluster stars in Tr 14
+    - Even the core region is defined as 0.4 to 0.9 arcmin, so 24 to 54 arcsec, which is comfortably outside the high G0 regime
+      - G0 = 8e5 to 1.5e5
+    - The outer region goes out to 2 to 3 arcmin, so lowest values of G0 are about 2e4
 ** [2023-12-21 Thu] Message from Tom
 #+begin_quote
 Leonardo (cc’d) has spectroscopic data towards a large number of YSOs in Tr 14 (e.g. https://ui.adsabs.harvard.edu/abs/2023arXiv230914168I/abstract). One of the things that would be nice to try and do with the data is compare against the recent Ballabio + 2023 paper on [OI] 6300 that you helped us with. They can certainly get the line luminosity and may be able to get the accretion luminosity too for the L_OI/L_acc diagnostic.
