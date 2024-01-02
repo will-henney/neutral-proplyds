@@ -68,6 +68,8 @@ This is for application to measurements of YSOs in the Carina nebula
 - Consistency check with Stoerzer & Hollenbach (1999)
   - G0 = 2e7 at 0.01 pc
   - G0 = 5e4 at 0.3 pc
+  - so this implies G0 = 2000 / D_pc^2, which is within 10% of what I had before - close enough!
+  - but we can combine with the current distance, so that 1 arcsec = 2 mpc
 - The ionizing luminosity of Tr 14 is about 20 times Orion, so presumably the bolometric luminosity factor is similar
   - So G0 = 2e6 will occur at a radius that is sqrt(20) times larger, so 0.134 pc
   - But Carina is at 2350 pc, which is 5.66 times farther, so the angular separation is sqrt(20) / 5.66 = 0.79 times larger, so 12 arcsec
@@ -75,6 +77,14 @@ This is for application to measurements of YSOs in the Carina nebula
     - Even the core region is defined as 0.4 to 0.9 arcmin, so 24 to 54 arcsec, which is comfortably outside the high G0 regime
       - G0 = 8e5 to 1.5e5
     - The outer region goes out to 2 to 3 arcmin, so lowest values of G0 are about 2e4
+** [2024-01-02 Tue] Message from Will
+#+begin_quote
+This is a plot of the fraction of the total [O I] 6300 emission that comes from the neutral disk wind as a function of G0 for the Orion proplyds (where the other fraction comes from the ionization front).  For G0 less than 2e7, this is consistent with a constant fraction of about 0.6 +/- 0.1.
+
+Symbol size is proportional to size of ionization front. Symbol color is proportional to size of disk. There is no evidence for any significant dependence on either of these.  For the strongest radiation fields (G0 > 2e7), there is evidence that the fraction is lower (the downward pointing arrows are upper limits). 
+
+For Carina Tr 14, the mapping from angular separation to G0 is almost the same as in Orion (the higher luminosity compensates for the greater distance). So the high G0 regime corresponds to the inner 10 arcsec of the cluster, and is not relevant to the sources in your MUSE sample. So I think you can safely use 0.6 as the correction factor. For the outer part of the Tr 14 data (radii larger than 1.5 arcmin) you will be at lower values of G0 than are sampled by these Orion data. We might expect the fraction to eventually go up to unity at very low G0, when internal irradiation takes over
+#+end_quote
 ** [2023-12-21 Thu] Message from Tom
 #+begin_quote
 Leonardo (cc’d) has spectroscopic data towards a large number of YSOs in Tr 14 (e.g. https://ui.adsabs.harvard.edu/abs/2023arXiv230914168I/abstract). One of the things that would be nice to try and do with the data is compare against the recent Ballabio + 2023 paper on [OI] 6300 that you helped us with. They can certainly get the line luminosity and may be able to get the accretion luminosity too for the L_OI/L_acc diagnostic.

@@ -694,7 +694,7 @@ fig.savefig("proplyd-pc-profiles.pdf")
 fig.savefig("proplyd-pc-profiles.jpg", dpi=300)
 
 
-# + [markdown] pycharm={"name": "#%% md\n"} jupyter={"outputs_hidden": false}
+# + [markdown] jupyter={"outputs_hidden": false} pycharm={"name": "#%% md\n"}
 #
 # ## Calculate the final fluxes for each proplyd
 #
@@ -1042,26 +1042,26 @@ fig.tight_layout()
 fig.savefig("proplyd-pc-r-r.pdf")
 fig.savefig("proplyd-pc-r-r.jpg", dpi=300)
 
-# + [markdown] pycharm={"name": "#%% md\n"} jupyter={"outputs_hidden": false}
+# + [markdown] jupyter={"outputs_hidden": false} pycharm={"name": "#%% md\n"}
 # # Profiles of just the positive detections
 
-# + [markdown] pycharm={"name": "#%% md\n"} jupyter={"outputs_hidden": false}
+# + [markdown] jupyter={"outputs_hidden": false} pycharm={"name": "#%% md\n"}
 #
 
-# + pycharm={"name": "#%%\n"} jupyter={"outputs_hidden": false}
+# + jupyter={"outputs_hidden": false} pycharm={"name": "#%%\n"}
 new_table = source_table.copy()
 badrows, = np.where(upper_limits)
 new_table.remove_rows(list(badrows))
 new_table.remove_rows([new_table.loc[s].index for s in ["161-328", "158-327"]])
 len(new_table)
 
-# + pycharm={"name": "#%%\n"} jupyter={"outputs_hidden": false}
+# + jupyter={"outputs_hidden": false} pycharm={"name": "#%%\n"}
 ymaxes =  {
     "170-337": 18,
     "171-340": 30,
 }
 
-# + pycharm={"name": "#%%\n"} jupyter={"outputs_hidden": false}
+# + jupyter={"outputs_hidden": false} pycharm={"name": "#%%\n"}
 
 ncols = 4
 nrows = 5
@@ -1152,9 +1152,148 @@ sns.despine()
 fig.tight_layout(rect=(0, 0, 1, 0.9))
 ...;
 
-# + pycharm={"name": "#%%\n"} jupyter={"outputs_hidden": false}
+# + jupyter={"outputs_hidden": false} pycharm={"name": "#%%\n"}
 fig.savefig("proplyd-pc-select.pdf")
 fig.savefig("proplyd-pc-select.jpg", dpi=300)
 
-# + pycharm={"name": "#%%\n"} jupyter={"outputs_hidden": false}
+# + [markdown] jupyter={"outputs_hidden": false} pycharm={"name": "#%%\n"}
+# ## Plots versus $G_0$
+#
+# For the Carina application, we want to look at the [O I] fractions from the disk wind and ionization front as a function of the incident radiation field.  In units of the Habing flux, this is given by 
+# $$
+# G_0 = \frac{2000}{(D/\mathrm{pc})^2}
+# $$
+# -
+
+# Assume distance of 440 pc:
+
+lscale = (440 * u.au ).to(u.pc) / u.arcsec
+lscale
+
+
+# +
+def G0_from_sep(sep):
+    return 2000 / (lscale * sep / u.pc)**2
+
+G0_from_sep(15 * u.arcsec)
+# -
+
+results_table["G0"] = G0_from_sep(results_table["Sep"])
+
+# +
+fig, axes = plt.subplots(3, 1, sharex=True, figsize=(8, 12))
+axes[0].scatter(
+    "G0",
+    "L_ha",
+    data=results_table,
+    s=30 * results_table["r_ha"] / 0.05,
+    c="r_oi",
+    cmap="magma_r",
+    edgecolor="k",
+)
+axes[1].scatter(
+    "G0",
+    "L_oi",
+    data=results_table,
+    s=30 * results_table["r_ha"] / 0.05,
+    c="r_oi",
+    cmap="magma_r",
+    edgecolor="k",
+)
+axes[2].scatter(
+    results_table["G0"],
+    results_table["L_oi"] / results_table["L_oi_b"],
+    s=30 * results_table["r_ha"] / 0.05,
+    c=results_table["r_oi"],
+    cmap="magma_r",
+    edgecolor="k",
+)
+
+for row in results_table:
+    if np.isfinite(row["L_oi"]):
+        axes[1].plot(
+            [row["G0"].value, row["G0"].value],
+            [row["L_oi_lo"].value, row["L_oi_hi"].value],
+            color="r",
+            alpha=row["s/n"]/10,
+        )
+        axes[2].plot(
+            [row["G0"].value, row["G0"].value],
+            [row["L_oi_lo"].value / row["L_oi_b"].value, row["L_oi_hi"].value / row["L_oi_b"].value],
+            color="r",
+            alpha=row["s/n"]/10,
+        )
+    else:
+        axes[1].scatter(
+            row["G0"].value,
+            row["L_oi_hi"].value,
+            marker="$\downarrow$",
+            color="r",
+            s=100,
+            alpha=0.4,
+        )
+        axes[2].scatter(
+            row["G0"].value,
+            min(1.0, row["L_oi_hi"].value / row["L_oi_b"].value),
+            marker="$\downarrow$",
+            color="r",
+            s=100,
+            alpha=0.4,
+        )
+for ax in axes[:2]:
+    ax.set(
+        xscale="log",
+        yscale="log",
+        xlim=[5e4, 2e7],
+    )
+axes[2].set(
+    ylim=[0, 1.05],
+)
+axes[-1].set_xlabel("Incident radiation field, $G_0$")
+axes[0].set_ylabel("Hα λ6563\nI-front luminosity, L$_⊙$")
+axes[1].set_ylabel("[O I] λ6300\nDisk wind luminosity, L$_⊙$")
+axes[2].set_ylabel("[O I] λ6300\nDisk wind fraction")
+sns.despine()
+fig.tight_layout()
+...;
+# -
+
+fig.savefig("proplyd-pc-L-G0.pdf")
+fig.savefig("proplyd-pc-L-G0.jpg", dpi=300)
+
+# Symbol size is proportional to size of ionization front. Symbol color is proportional to size of disk. 
+
+mask = results_table["G0"] < 2e6
+
+mask
+
+results_table["disk frac"] = results_table["L_oi"] / results_table["L_oi_b"]
+results_table["disk frac hi"] = results_table["L_oi_hi"] / results_table["L_oi_b"]
+
+# Find mean and standard deviation for the low G0 regime:
+
+results_table[mask]["disk frac"]
+
+np.nanmean(results_table[mask]["disk frac"])
+
+np.nanmedian(results_table[mask]["disk frac"])
+
+np.nanstd(results_table[mask]["disk frac"])
+
+# So average value is $0.6 +/- 0.1$. And median is consistent with this
+
+results_table[~mask]["disk frac"]
+
+# For the high-G0 regime, most of the sources are non-detections (upper limits), so the median fraction is zero. 
+
+np.mean(results_table[mask & np.isfinite(results_table["disk frac hi"])]["disk frac hi"])
+
+# Compare the one-sigma upper bounds between the two regimes:
+
+np.median(results_table[mask & np.isfinite(results_table["disk frac hi"])]["disk frac hi"])
+
+np.median(results_table[~mask & np.isfinite(results_table["disk frac hi"])]["disk frac hi"])
+
+# So, the high-G0 regime has significantly lower median upper limit. And the median actual detection is zero (because there are more non-detections than actual detections)
+
 
